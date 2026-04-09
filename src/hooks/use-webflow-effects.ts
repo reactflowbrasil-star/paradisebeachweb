@@ -3,6 +3,8 @@ import { useLocation } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+gsap.registerPlugin(ScrollTrigger);
+
 const AUTO_REVEAL_SELECTOR = [
   "main section",
   "main h1",
@@ -21,13 +23,12 @@ export function useWebflowEffects() {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) return;
 
-    gsap.registerPlugin(ScrollTrigger);
-
-    const ctx = gsap.context(() => {
+    // Small delay to let DOM settle
+    const raf = requestAnimationFrame(() => {
       const manualReveal = gsap.utils.toArray<HTMLElement>("[data-reveal]");
       const autoReveal = gsap.utils
         .toArray<HTMLElement>(AUTO_REVEAL_SELECTOR)
-        .filter((element) => !element.closest("[data-reveal]") && !element.hasAttribute("data-no-reveal"));
+        .filter((el) => !el.closest("[data-reveal]") && !el.hasAttribute("data-no-reveal"));
 
       const revealElements = [...new Set([...manualReveal, ...autoReveal])];
 
@@ -67,43 +68,44 @@ export function useWebflowEffects() {
         );
       });
 
-      const media = gsap.matchMedia();
-      media.add("(min-width: 768px)", () => {
-        gsap.utils.toArray<HTMLElement>("[data-magnetic]").forEach((button) => {
+      // Magnetic buttons (desktop only)
+      const magneticButtons = gsap.utils.toArray<HTMLElement>("[data-magnetic]");
+      const magneticHandlers: Array<{ el: HTMLElement; move: (e: PointerEvent) => void; leave: () => void }> = [];
+
+      if (window.innerWidth >= 768) {
+        magneticButtons.forEach((button) => {
           const onMove = (event: PointerEvent) => {
             const rect = button.getBoundingClientRect();
             const x = event.clientX - rect.left - rect.width / 2;
             const y = event.clientY - rect.top - rect.height / 2;
-
-            gsap.to(button, {
-              x: x * 0.14,
-              y: y * 0.18,
-              duration: 0.3,
-              ease: "power2.out",
-            });
+            gsap.to(button, { x: x * 0.14, y: y * 0.18, duration: 0.3, ease: "power2.out" });
           };
-
           const onLeave = () => {
             gsap.to(button, { x: 0, y: 0, duration: 0.35, ease: "power3.out" });
           };
-
           button.addEventListener("pointermove", onMove);
           button.addEventListener("pointerleave", onLeave);
-
-          ctx.add(() => {
-            button.removeEventListener("pointermove", onMove);
-            button.removeEventListener("pointerleave", onLeave);
-          });
+          magneticHandlers.push({ el: button, move: onMove, leave: onLeave });
         });
-      });
+      }
 
-      ctx.add(() => media.revert());
+      ScrollTrigger.refresh();
+
+      // Store cleanup ref
+      cleanupRef = () => {
+        ScrollTrigger.getAll().forEach((t) => t.kill());
+        magneticHandlers.forEach(({ el, move, leave }) => {
+          el.removeEventListener("pointermove", move);
+          el.removeEventListener("pointerleave", leave);
+        });
+      };
     });
 
-    ScrollTrigger.refresh();
+    let cleanupRef: (() => void) | null = null;
 
     return () => {
-      ctx.revert();
+      cancelAnimationFrame(raf);
+      cleanupRef?.();
     };
   }, [location.pathname]);
 }
