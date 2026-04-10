@@ -45,15 +45,19 @@ function LocateButton({ onLocate }: { onLocate: (coords: [number, number]) => vo
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleLocate}
-      className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted transition-colors"
-      aria-label="Localizar minha posição"
-    >
-      <Navigation size={16} />
-      {locating ? "Buscando..." : "Minha localização"}
-    </button>
+    <div className="leaflet-top leaflet-right">
+      <div className="leaflet-control" style={{ pointerEvents: 'auto' }}>
+        <button
+          type="button"
+          onClick={handleLocate}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted transition-colors"
+          aria-label="Localizar minha posição"
+        >
+          <Navigation size={16} />
+          {locating ? "Buscando..." : "Minha localização"}
+        </button>
+      </div>
+    </div>
   );
 }
 
