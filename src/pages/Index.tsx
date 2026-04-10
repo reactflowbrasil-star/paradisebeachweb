@@ -8,9 +8,10 @@ import sunsetImg from "@/assets/beach-sunset.jpg";
 import prop1 from "@/assets/property-1.jpg";
 import prop2 from "@/assets/property-2.jpg";
 import prop3 from "@/assets/property-3.jpg";
-import { properties } from "@/data/properties";
+import { useProperties } from "@/hooks/useProperties";
 import PropertyCard from "@/components/PropertyCard";
 import SectionTitle from "@/components/SectionTitle";
+import { Loader2 } from "lucide-react";
 
 const heroSlides = [
   { src: heroImg, alt: "Villa de luxo à beira-mar com piscina infinita ao pôr do sol" },

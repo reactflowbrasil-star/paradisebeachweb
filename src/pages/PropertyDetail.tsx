@@ -1,13 +1,21 @@
 import { useParams, Link } from "react-router-dom";
-import { properties, formatPrice } from "@/data/properties";
-import { Bed, Bath, Maximize, MapPin, ArrowLeft, Phone, Heart, Share2, Check } from "lucide-react";
+import { useProperty, formatPrice } from "@/hooks/useProperties";
+import { Bed, Bath, Maximize, MapPin, ArrowLeft, Phone, Heart, Share2, Check, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import LazyImage from "@/components/LazyImage";
 import PropertyMap from "@/components/PropertyMap";
 
 export default function PropertyDetail() {
   const { id } = useParams();
-  const property = properties.find((p) => p.id === id);
+  const { property, loading } = useProperty(id);
+
+  if (loading) {
+    return (
+      <div className="pt-32 pb-16 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -68,7 +76,7 @@ export default function PropertyDetail() {
                 ))}
               </div>
 
-              {/* Map with Mapbox / geolocation */}
+              {/* Map with geolocation */}
               <h2 className="font-serif text-xl font-semibold text-foreground mb-4">Localização</h2>
               <PropertyMap property={property} />
             </motion.div>
