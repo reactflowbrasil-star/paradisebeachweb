@@ -1,19 +1,29 @@
 import { motion } from "framer-motion";
 import SectionTitle from "@/components/SectionTitle";
 import sunsetImg from "@/assets/beach-sunset.jpg";
-import { Award, Users, Home, Globe } from "lucide-react";
+import { Award, Users, Globe } from "lucide-react";
 
-const stats = [
-  { icon: Award, value: "5+", label: "Anos de experiência" },
-  { icon: Globe, value: "4", label: "Cidades de atuação" },
-  { icon: Home, value: "Locação", label: "Casas e apartamentos de temporada" },
-  { icon: Users, value: "Venda", label: "Imóveis selecionados para diferentes perfis" },
+const highlights = [
+  {
+    icon: Users,
+    title: "Muitos clientes satisfeitos",
+    description: "Atendimento próximo, transparente e focado em entregar a melhor experiência em cada etapa.",
+  },
+  {
+    icon: Award,
+    title: "Mais de 5 anos de experiência",
+    description: "Atuação consolidada com qualidade, confiança e excelência no mercado imobiliário.",
+  },
+  {
+    icon: Globe,
+    title: "Cidades do Nordeste atendidas",
+    description: "Presença em João Pessoa, Cabedelo, Campina Grande e Porto de Galinhas.",
+  },
 ];
 
 export default function About() {
   return (
     <div className="pb-16 pt-24 sm:pt-28">
-      {/* Hero */}
       <section className="relative overflow-hidden py-24">
         <img
           src={sunsetImg}
@@ -34,7 +44,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* Story */}
       <section className="bg-background py-24">
         <div className="mx-auto max-w-3xl mobile-shell">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -60,22 +69,21 @@ export default function About() {
         </div>
       </section>
 
-      {/* Stats */}
       <section className="bg-sand py-20">
-        <div className="mx-auto mobile-shell">
-          <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-            {stats.map((s, i) => (
+        <div className="mx-auto max-w-5xl mobile-shell">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {highlights.map((item, i) => (
               <motion.div
-                key={s.label}
+                key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="text-center"
+                className="rounded-2xl bg-background p-8 text-center shadow-card"
               >
-                <s.icon size={32} className="mx-auto mb-3 text-primary" />
-                <p className="mb-1 font-serif text-4xl font-bold text-foreground">{s.value}</p>
-                <p className="text-sm text-muted-foreground">{s.label}</p>
+                <item.icon size={32} className="mx-auto mb-4 text-primary" />
+                <h3 className="mb-3 font-serif text-2xl font-bold text-foreground">{item.title}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{item.description}</p>
               </motion.div>
             ))}
           </div>

@@ -4,6 +4,7 @@ import { Bed, Bath, Maximize, MapPin, ArrowLeft, Phone, Heart, Share2, Check } f
 import { motion } from "framer-motion";
 import LazyImage from "@/components/LazyImage";
 import PropertyMap from "@/components/PropertyMap";
+import { CONTACT_PHONE_RAW } from "@/lib/contact";
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -94,7 +95,7 @@ export default function PropertyDetail() {
                 </p>
 
                 <a
-                  href={`https://wa.me/5573999990000?text=Olá! Tenho interesse no imóvel: ${property.title}`}
+                  href={`https://wa.me/55${CONTACT_PHONE_RAW}?text=${encodeURIComponent(`Olá! Tenho interesse no imóvel: ${property.title}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="button-pop w-full bg-gradient-gold text-gold-foreground py-4 rounded-full font-semibold text-center block mb-3 hover:shadow-gold transition-all" data-magnetic
