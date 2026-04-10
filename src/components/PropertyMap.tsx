@@ -45,15 +45,19 @@ function LocateButton({ onLocate }: { onLocate: (coords: [number, number]) => vo
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleLocate}
-      className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted transition-colors"
-      aria-label="Localizar minha posição"
-    >
-      <Navigation size={16} />
-      {locating ? "Buscando..." : "Minha localização"}
-    </button>
+    <div className="leaflet-top leaflet-right">
+      <div className="leaflet-control" style={{ pointerEvents: 'auto' }}>
+        <button
+          type="button"
+          onClick={handleLocate}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted transition-colors"
+          aria-label="Localizar minha posição"
+        >
+          <Navigation size={16} />
+          {locating ? "Buscando..." : "Minha localização"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -71,12 +75,9 @@ export default function PropertyMap({ property }: PropertyMapProps) {
 
   return (
     <div className="rounded-lg overflow-hidden bg-muted">
-      <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
-        <div className="flex items-center gap-2 text-sm text-foreground/80">
-          <MapPin size={16} />
-          <span>{property.location}, {property.city} — {property.state}</span>
-        </div>
-        <LocateButton onLocate={setUserPosition} />
+      <div className="flex items-center gap-2 text-sm text-foreground/80 border-b border-border bg-card px-4 py-3">
+        <MapPin size={16} />
+        <span>{property.location}, {property.city} — {property.state}</span>
       </div>
       <div className="h-[28rem]">
         <MapContainer
@@ -103,6 +104,7 @@ export default function PropertyMap({ property }: PropertyMapProps) {
               <Circle center={userPosition} radius={70} pathOptions={{ color: "#22c55e", fillColor: "#bbf7d0", fillOpacity: 0.3 }} />
             </>
           ) : null}
+          <LocateButton onLocate={setUserPosition} />
         </MapContainer>
       </div>
       {!token ? (
