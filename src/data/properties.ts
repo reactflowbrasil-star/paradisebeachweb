@@ -5,11 +5,16 @@ import property4 from "@/assets/property-4.jpg";
 import property5 from "@/assets/property-5.jpg";
 import property6 from "@/assets/property-6.jpg";
 
+export type PropertyType = "casa" | "villa" | "apartamento" | "terreno";
+export type PropertyListing = "venda" | "aluguel";
+export type PropertyStatus = "disponivel" | "indisponivel" | "manutencao" | "vendido" | "alugado";
+
 export interface Property {
   id: string;
+  code: string;
   title: string;
-  type: "casa" | "villa" | "apartamento" | "terreno";
-  listing: "venda" | "aluguel";
+  type: PropertyType;
+  listing: PropertyListing;
   price: number;
   priceLabel?: string;
   location: string;
@@ -19,145 +24,181 @@ export interface Property {
   bedrooms: number;
   bathrooms: number;
   area: number;
+  maxGuests: number;
+  minNights: number;
+  checkInTime: string;
+  checkOutTime: string;
   oceanView: boolean;
   featured: boolean;
-  status: "disponivel" | "vendido" | "alugado";
+  status: PropertyStatus;
   images: string[];
   amenities: string[];
   lat: number;
   lng: number;
 }
 
-export const properties: Property[] = [
+export const defaultProperties: Property[] = [
   {
     id: "1",
-    title: "Villa Paradiso — Frente ao Mar",
+    code: "PB-101",
+    title: "Villa Paradiso Frente Mar",
     type: "villa",
     listing: "venda",
     price: 8500000,
     location: "Praia do Espelho",
     city: "Trancoso",
     state: "BA",
-    description: "Villa deslumbrante com acesso privativo à praia, piscina infinita e jardim tropical exuberante. Arquitetura contemporânea que se harmoniza perfeitamente com a natureza circundante. Acabamentos de altíssimo padrão, cozinha gourmet completa e amplas varandas com vista panorâmica para o oceano.",
+    description: "Villa de alto padrao com acesso privativo a praia, piscina infinita e amplos ambientes integrados para viver ou investir no litoral.",
     bedrooms: 5,
     bathrooms: 6,
     area: 650,
+    maxGuests: 12,
+    minNights: 2,
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     oceanView: true,
     featured: true,
     status: "disponivel",
     images: [property1],
-    amenities: ["Piscina Infinita", "Acesso à Praia", "Jardim Tropical", "Cozinha Gourmet", "Suíte Master", "Garagem 4 Carros"],
+    amenities: ["Piscina infinita", "Acesso a praia", "Jardim tropical", "Cozinha gourmet", "Suite master", "Garagem"],
     lat: -16.4536,
     lng: -39.0972,
   },
   {
     id: "2",
+    code: "PB-102",
     title: "Penthouse Sky Ocean",
     type: "apartamento",
     listing: "venda",
     price: 4200000,
     location: "Beira Mar",
-    city: "Florianópolis",
+    city: "Florianopolis",
     state: "SC",
-    description: "Penthouse exclusiva com vista 360° do oceano e da cidade. Terraço amplo, acabamentos em mármore italiano e automação residencial completa. Localização privilegiada na região mais nobre da ilha.",
+    description: "Penthouse exclusiva com vista panoramica, terraco amplo e acabamento premium em uma das regioes mais valorizadas do litoral.",
     bedrooms: 4,
     bathrooms: 5,
     area: 380,
+    maxGuests: 8,
+    minNights: 2,
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     oceanView: true,
     featured: true,
     status: "disponivel",
     images: [property2],
-    amenities: ["Vista 360°", "Terraço Panorâmico", "Automação", "Mármore Italiano", "Piscina Privativa", "2 Vagas"],
+    amenities: ["Vista 360", "Terraco", "Automacao", "Piscina privativa", "Duas vagas", "Portaria"],
     lat: -27.5954,
-    lng: -48.5480,
+    lng: -48.548,
   },
   {
     id: "3",
-    title: "Refúgio Tropical Bali Style",
+    code: "PB-201",
+    title: "Refugio Tropical Bali Style",
     type: "villa",
     listing: "aluguel",
     price: 3500,
-    priceLabel: "/diária",
+    priceLabel: "/diaria",
     location: "Praia de Itapororoca",
     city: "Trancoso",
     state: "BA",
-    description: "Villa no estilo balinês com piscina privativa, deck de madeira nobre e acesso direto à praia. Perfeita para férias inesquecíveis em família ou retiro de luxo.",
+    description: "Hospedagem premium com piscina privativa, deck de madeira e experiencia exclusiva para familias, casais ou pequenos grupos.",
     bedrooms: 4,
     bathrooms: 4,
     area: 420,
+    maxGuests: 10,
+    minNights: 2,
+    checkInTime: "15:00",
+    checkOutTime: "12:00",
     oceanView: true,
     featured: true,
     status: "disponivel",
     images: [property3],
-    amenities: ["Piscina Privativa", "Deck de Madeira", "Praia Privativa", "Chef Disponível", "Wi-Fi", "Ar Condicionado"],
+    amenities: ["Piscina privativa", "Deck de madeira", "Praia privativa", "Wi-Fi", "Ar-condicionado", "Chef sob consulta"],
     lat: -16.5883,
     lng: -39.0953,
   },
   {
     id: "4",
+    code: "PB-202",
     title: "Residencial Azure Tower",
     type: "apartamento",
-    listing: "venda",
-    price: 2800000,
+    listing: "aluguel",
+    price: 1800,
+    priceLabel: "/diaria",
     location: "Praia de Maresias",
-    city: "São Sebastião",
+    city: "Sao Sebastiao",
     state: "SP",
-    description: "Apartamento de alto padrão no condomínio mais exclusivo da região. Infraestrutura completa de lazer, segurança 24h e localização privilegiada a poucos passos da praia.",
+    description: "Apartamento de temporada com estrutura completa, servicos de apoio e localizacao privilegiada para estadias confortaveis.",
     bedrooms: 3,
     bathrooms: 4,
     area: 220,
+    maxGuests: 7,
+    minNights: 2,
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     oceanView: true,
     featured: true,
     status: "disponivel",
     images: [property4],
-    amenities: ["Piscina", "Academia", "Sauna", "Quadra de Tênis", "Segurança 24h", "Playground"],
+    amenities: ["Piscina", "Academia", "Sauna", "Quadra", "Seguranca 24h", "Playground"],
     lat: -23.7898,
     lng: -45.5654,
   },
   {
     id: "5",
+    code: "PB-301",
     title: "Terreno Praia dos Sonhos",
     type: "terreno",
     listing: "venda",
     price: 3200000,
     location: "Praia dos Coqueiros",
-    city: "Maraú",
+    city: "Marau",
     state: "BA",
-    description: "Terreno excepcional de frente para o mar com 2.500m² em uma das praias mais preservadas do litoral baiano. Ideal para construir a residência dos seus sonhos em um verdadeiro paraíso.",
+    description: "Terreno frente mar com metragem generosa para desenvolvimento de empreendimento de hospedagem ou residencia exclusiva.",
     bedrooms: 0,
     bathrooms: 0,
     area: 2500,
+    maxGuests: 0,
+    minNights: 0,
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     oceanView: true,
-    featured: true,
+    featured: false,
     status: "disponivel",
     images: [property5],
-    amenities: ["Frente ao Mar", "Escritura Definitiva", "Acesso Pavimentado", "Energia Elétrica", "Água Encanada", "Área Preservada"],
+    amenities: ["Frente mar", "Escritura", "Acesso pavimentado", "Energia", "Agua encanada", "Area preservada"],
     lat: -14.0989,
     lng: -38.9981,
   },
   {
     id: "6",
-    title: "Mansão Cliff Edge",
+    code: "PB-203",
+    title: "Mansao Cliff Edge",
     type: "casa",
-    listing: "venda",
-    price: 12000000,
+    listing: "aluguel",
+    price: 6500,
+    priceLabel: "/diaria",
     location: "Praia da Ferradura",
-    city: "Búzios",
+    city: "Buzios",
     state: "RJ",
-    description: "Mansão espetacular no topo do penhasco com vista infinita para o oceano. Piscina de borda infinita, heliponto, spa completo e 6 suítes de luxo. Uma propriedade verdadeiramente única no litoral brasileiro.",
+    description: "Casa de temporada com vista panoramica, estrutura completa de lazer e experiencia premium para estadias memoraveis.",
     bedrooms: 6,
     bathrooms: 8,
     area: 900,
+    maxGuests: 14,
+    minNights: 3,
+    checkInTime: "15:00",
+    checkOutTime: "12:00",
     oceanView: true,
     featured: true,
     status: "disponivel",
     images: [property6],
-    amenities: ["Piscina Infinita", "Heliponto", "Spa", "Cinema", "Adega Climatizada", "Elevador"],
+    amenities: ["Piscina infinita", "Spa", "Cinema", "Adega", "Area gourmet", "Vista mar"],
     lat: -22.7669,
     lng: -41.8818,
   },
 ];
 
-export const formatPrice = (price: number, label?: string) => {
-  return `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
-};
+export const properties = defaultProperties;
+
+export const formatPrice = (price: number, label?: string) => `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;

@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
-import { properties } from "@/data/properties";
 import PropertyCard from "@/components/PropertyCard";
 import SectionTitle from "@/components/SectionTitle";
 import { Search, SlidersHorizontal, X } from "lucide-react";
+import { useHotelAdmin } from "@/lib/hotel-admin";
 
 interface Props {
   listing: "venda" | "aluguel";
 }
 
 export default function PropertiesPage({ listing }: Props) {
+  const { properties } = useHotelAdmin();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
@@ -23,7 +24,7 @@ export default function PropertiesPage({ listing }: Props) {
         p.city.toLowerCase().includes(search.toLowerCase()) ||
         p.location.toLowerCase().includes(search.toLowerCase())
       );
-  }, [listing, search, typeFilter]);
+  }, [listing, properties, search, typeFilter]);
 
 
   return (
@@ -31,10 +32,10 @@ export default function PropertiesPage({ listing }: Props) {
       <div className="mobile-shell mx-auto">
         <SectionTitle
           label={listing === "venda" ? "Compre" : "Alugue"}
-          title={listing === "venda" ? "Imóveis à Venda" : "Imóveis para Aluguel"}
+          title={listing === "venda" ? "ImÃ³veis Ã  Venda" : "ImÃ³veis para Aluguel"}
           subtitle={listing === "venda"
-            ? "Encontre a propriedade perfeita para realizar seu sonho à beira-mar."
-            : "Viva experiências inesquecíveis nas melhores praias do Brasil."
+            ? "Encontre a propriedade perfeita para realizar seu sonho Ã  beira-mar."
+            : "Viva experiÃªncias inesquecÃ­veis nas melhores praias do Brasil."
           }
         />
 
@@ -44,7 +45,7 @@ export default function PropertiesPage({ listing }: Props) {
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Buscar por nome, cidade ou região..."
+              placeholder="Buscar por nome, cidade ou regiÃ£o..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-12 pr-4 py-3 rounded-full border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground"
@@ -87,7 +88,7 @@ export default function PropertiesPage({ listing }: Props) {
 
         {filtered.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-muted-foreground text-lg">Nenhum imóvel encontrado com esses filtros.</p>
+            <p className="text-muted-foreground text-lg">Nenhum imÃ³vel encontrado com esses filtros.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
