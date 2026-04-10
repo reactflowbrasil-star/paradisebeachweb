@@ -3,21 +3,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, MapPin, TrendingUp, Gem, Star, ArrowRight } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
-import heroImg from "@/assets/hero-beach.jpg";
 import sunsetImg from "@/assets/beach-sunset.jpg";
-import prop1 from "@/assets/property-1.jpg";
-import prop2 from "@/assets/property-2.jpg";
-import prop3 from "@/assets/property-3.jpg";
+import slideBg1 from "@/assets/slide-bg-1.jpg";
+import slideBg2 from "@/assets/slide-bg-2.jpg";
+import slideBg3 from "@/assets/slide-bg-3.jpg";
 import { properties } from "@/data/properties";
 import PropertyCard from "@/components/PropertyCard";
 import SectionTitle from "@/components/SectionTitle";
 
 const heroSlides = [
-  { src: heroImg, alt: "Villa de luxo à beira-mar com piscina infinita ao pôr do sol" },
-  { src: sunsetImg, alt: "Pôr do sol deslumbrante na praia paradisíaca" },
-  { src: prop1, alt: "Propriedade de luxo com vista para o mar" },
-  { src: prop2, alt: "Casa premium à beira-mar" },
-  { src: prop3, alt: "Imóvel exclusivo no litoral" },
+  { src: slideBg1, alt: "Praia paradisíaca com mirante de madeira e mar calmo" },
+  { src: slideBg2, alt: "Farol histórico à beira-mar com ondas quebrando nas pedras" },
+  { src: slideBg3, alt: "Orla urbana ensolarada com praia e vista panorâmica da cidade" },
 ];
 
 const benefits = [
@@ -54,7 +51,7 @@ export default function Index() {
         <meta name="keywords" content="imóveis beira-mar, villas luxo, casas praia, aluguel temporada, venda imóveis litoral" />
         <meta property="og:title" content="Paradise Beach - Imóveis de Luxo à Beira-Mar" />
         <meta property="og:description" content="Viva o paraíso: imóveis premium à beira-mar para venda e aluguel." />
-        <meta property="og:image" content={heroImg} />
+        <meta property="og:image" content={slideBg1} />
         <meta property="og:url" content="https://paradisebeach.com" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href="https://paradisebeach.com" />
