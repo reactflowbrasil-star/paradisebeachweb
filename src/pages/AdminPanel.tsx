@@ -101,7 +101,7 @@ function AdminPanel() {
   const [propertyForm, setPropertyForm] = useState({
     title: "", type: "casa" as DbProperty["type"], listing: "venda" as DbProperty["listing"],
     price: "", city: "", state: "", location: "", description: "",
-    bedrooms: "0", bathrooms: "0", area: "0",
+    bedrooms: "0", bathrooms: "0", area: "0", photos: null as FileList | null,
   });
   const [reservationForm, setReservationForm] = useState({
     propertyId: "", guestName: "", email: "",
@@ -165,6 +165,38 @@ function AdminPanel() {
     return reservations.filter(r => r.status === reservationFilter);
   }, [reservations, reservationFilter]);
 
+  const uploadPhotosForProperty = async (propertyId: string, files: FileList) => {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split(".").pop();
+      const path = `${propertyId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("property-photos")
+        .upload(path, file);
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        toast.error(`Erro no upload de ${file.name}: ${uploadError.message}`);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage.from("property-photos").getPublicUrl(path);
+
+      const { error: insertError } = await supabase.from("property_photos").insert({
+        property_id: propertyId,
+        url: urlData.publicUrl,
+        caption: file.name.replace(/\.[^.]+$/, ""),
+        cover: i === 0, // First photo as cover
+      });
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        toast.error(`Erro ao salvar foto ${file.name}: ${insertError.message}`);
+      }
+    }
+  };
+
   // ---- CRUD ----
   const addProperty = async (e: FormEvent) => {
     e.preventDefault();
@@ -183,14 +215,20 @@ function AdminPanel() {
       area: Number(propertyForm.area),
     };
     console.log("Insert payload:", payload);
-    const { error } = await supabase.from("properties").insert(payload);
+    const { data, error } = await supabase.from("properties").insert(payload).select("id").single();
     if (error) {
       console.error("Insert error:", error);
       toast.error(`Erro ao cadastrar: ${error.message}`);
       return;
     }
+
+    // Upload photos if selected
+    if (propertyForm.photos && propertyForm.photos.length > 0) {
+      await uploadPhotosForProperty(data.id, propertyForm.photos);
+    }
+
     toast.success("Imóvel cadastrado!");
-    setPropertyForm({ title: "", type: "casa", listing: "venda", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0" });
+    setPropertyForm({ title: "", type: "casa", listing: "venda", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0", photos: null });
     fetchAll();
   };
 
@@ -426,13 +464,18 @@ function AdminPanel() {
                       <Label htmlFor="area">Área (m²)</Label>
                       <Input id="area" type="number" min={0} value={propertyForm.area} onChange={(e) => setPropertyForm(prev => ({ ...prev, area: e.target.value }))} />
                     </div>
-                    <div className="space-y-1.5 md:col-span-2 xl:col-span-3">
-                      <Label htmlFor="description">Descrição</Label>
-                      <Textarea id="description" value={propertyForm.description} onChange={(e) => setPropertyForm(prev => ({ ...prev, description: e.target.value }))} rows={3} required />
-                    </div>
-                    <div className="md:col-span-2 xl:col-span-3">
-                      <Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar imóvel</Button>
-                    </div>
+                     <div className="space-y-1.5 md:col-span-2 xl:col-span-3">
+                       <Label htmlFor="description">Descrição</Label>
+                       <Textarea id="description" value={propertyForm.description} onChange={(e) => setPropertyForm(prev => ({ ...prev, description: e.target.value }))} rows={3} required />
+                     </div>
+                     <div className="space-y-1.5 md:col-span-2 xl:col-span-3">
+                       <Label htmlFor="photos">Fotos do imóvel</Label>
+                       <Input id="photos" type="file" accept="image/*" multiple onChange={(e) => setPropertyForm(prev => ({ ...prev, photos: e.target.files }))} />
+                       <p className="text-xs text-muted-foreground">Selecione múltiplas fotos. A primeira será definida como capa.</p>
+                     </div>
+                     <div className="md:col-span-2 xl:col-span-3">
+                       <Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar imóvel</Button>
+                     </div>
                   </form>
                 </CardContent>
               </Card>
