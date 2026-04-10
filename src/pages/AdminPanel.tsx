@@ -208,29 +208,38 @@ function AdminPanel() {
   // Photo upload
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, propertyId: string) => {
     const files = e.target.files;
+    console.log("Files selected:", files);
     if (!files || files.length === 0) return;
     setUploadingPhoto(true);
 
     for (const file of Array.from(files)) {
       const ext = file.name.split(".").pop();
       const path = `${propertyId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      console.log("Uploading to path:", path);
 
       const { error: uploadError } = await supabase.storage
         .from("property-photos")
         .upload(path, file);
 
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         toast.error(`Erro no upload: ${uploadError.message}`);
         continue;
       }
 
       const { data: urlData } = supabase.storage.from("property-photos").getPublicUrl(path);
+      console.log("Public URL:", urlData.publicUrl);
 
-      await supabase.from("property_photos").insert({
+      const { error: insertError } = await supabase.from("property_photos").insert({
         property_id: propertyId,
         url: urlData.publicUrl,
         caption: file.name.replace(/\.[^.]+$/, ""),
       });
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        toast.error(`Erro ao salvar foto: ${insertError.message}`);
+      }
     }
 
     toast.success("Fotos enviadas!");
