@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react";
-import { Property, formatPrice } from "@/data/properties";
+import { type Property, formatPrice } from "@/hooks/useProperties";
 import { motion } from "framer-motion";
 import LazyImage from "./LazyImage";
 

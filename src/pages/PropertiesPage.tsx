@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
-import { properties } from "@/data/properties";
+import { useProperties, type Property } from "@/hooks/useProperties";
 import PropertyCard from "@/components/PropertyCard";
 import SectionTitle from "@/components/SectionTitle";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, Loader2 } from "lucide-react";
 
 interface Props {
   listing: "venda" | "aluguel";
 }
 
 export default function PropertiesPage({ listing }: Props) {
+  const { properties, loading } = useProperties();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
@@ -23,8 +24,15 @@ export default function PropertiesPage({ listing }: Props) {
         p.city.toLowerCase().includes(search.toLowerCase()) ||
         p.location.toLowerCase().includes(search.toLowerCase())
       );
-  }, [listing, search, typeFilter]);
+  }, [properties, listing, search, typeFilter]);
 
+  if (loading) {
+    return (
+      <div className="pb-16 pt-24 sm:pt-28 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="pb-16 pt-24 sm:pt-28">
