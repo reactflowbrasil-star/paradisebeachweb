@@ -101,7 +101,7 @@ function AdminPanel() {
   const [propertyForm, setPropertyForm] = useState({
     title: "", type: "casa" as DbProperty["type"], listing: "venda" as DbProperty["listing"],
     price: "", city: "", state: "", location: "", description: "",
-    bedrooms: "0", bathrooms: "0", area: "0", photos: null as FileList | null,
+    bedrooms: "0", bathrooms: "0", area: "0", photos: [] as File[], coverIndex: 0,
   });
   const [reservationForm, setReservationForm] = useState({
     propertyId: "", guestName: "", email: "",
@@ -165,7 +165,7 @@ function AdminPanel() {
     return reservations.filter(r => r.status === reservationFilter);
   }, [reservations, reservationFilter]);
 
-  const uploadPhotosForProperty = async (propertyId: string, files: FileList) => {
+  const uploadPhotosForProperty = async (propertyId: string, files: File[], coverIndex: number) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const ext = file.name.split(".").pop();
@@ -187,7 +187,7 @@ function AdminPanel() {
         property_id: propertyId,
         url: urlData.publicUrl,
         caption: file.name.replace(/\.[^.]+$/, ""),
-        cover: i === 0, // First photo as cover
+        cover: i === coverIndex,
       });
 
       if (insertError) {
@@ -224,11 +224,11 @@ function AdminPanel() {
 
     // Upload photos if selected
     if (propertyForm.photos && propertyForm.photos.length > 0) {
-      await uploadPhotosForProperty(data.id, propertyForm.photos);
+      await uploadPhotosForProperty(data.id, propertyForm.photos, propertyForm.coverIndex);
     }
 
     toast.success("Imóvel cadastrado!");
-    setPropertyForm({ title: "", type: "casa", listing: "venda", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0", photos: null });
+    setPropertyForm({ title: "", type: "casa", listing: "venda", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0", photos: [], coverIndex: 0 });
     fetchAll();
   };
 
@@ -470,8 +470,23 @@ function AdminPanel() {
                      </div>
                      <div className="space-y-1.5 md:col-span-2 xl:col-span-3">
                        <Label htmlFor="photos">Fotos do imóvel</Label>
-                       <Input id="photos" type="file" accept="image/*" multiple onChange={(e) => setPropertyForm(prev => ({ ...prev, photos: e.target.files }))} />
-                       <p className="text-xs text-muted-foreground">Selecione múltiplas fotos. A primeira será definida como capa.</p>
+                       <Input id="photos" type="file" accept="image/*" multiple onChange={(e) => setPropertyForm(prev => ({ ...prev, photos: Array.from(e.target.files || []), coverIndex: 0 }))} />
+                       {propertyForm.photos.length > 0 && (
+                         <div className="space-y-2">
+                           <p className="text-sm font-medium">Selecione a foto de capa:</p>
+                           {propertyForm.photos.map((file, index) => (
+                             <label key={index} className="flex items-center gap-2">
+                               <input
+                                 type="radio"
+                                 name="cover"
+                                 checked={propertyForm.coverIndex === index}
+                                 onChange={() => setPropertyForm(prev => ({ ...prev, coverIndex: index }))}
+                               />
+                               <span className="text-sm">{file.name}</span>
+                             </label>
+                           ))}
+                         </div>
+                       )}
                      </div>
                      <div className="md:col-span-2 xl:col-span-3">
                        <Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar imóvel</Button>
