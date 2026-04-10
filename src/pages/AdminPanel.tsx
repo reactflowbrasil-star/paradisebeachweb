@@ -24,6 +24,8 @@ const statusColor: Record<string, string> = {
   confirmada: "bg-emerald-100 text-emerald-700",
   pendente: "bg-amber-100 text-amber-700",
   cancelada: "bg-rose-100 text-rose-700",
+  checkin: "bg-blue-100 text-blue-700",
+  checkout: "bg-gray-100 text-gray-700",
 };
 
 function LoginForm({ onLogin }: { onLogin: () => void }) {
@@ -136,23 +138,28 @@ function AdminPanel() {
   const dashboardMetrics = useMemo(() => {
     const confirmed = reservations.filter(r => r.status === "confirmada");
     const pending = reservations.filter(r => r.status === "pendente");
+    const checkedIn = reservations.filter(r => r.status === "checkin");
+    const totalRooms = properties.length;
+    const occupiedRooms = checkedIn.length;
+    const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
     return {
-      totalProperties: properties.length,
+      totalRooms: totalRooms,
       totalPhotos: photos.length,
       confirmedBookings: confirmed.length,
       pendingBookings: pending.length,
+      checkedInBookings: checkedIn.length,
+      occupancyRate: Math.round(occupancyRate),
       monthlyRevenue: confirmed.reduce((sum, r) => sum + Number(r.total), 0),
-      featuredProperties: properties.filter(p => p.featured).length,
       totalGuests: new Set(reservations.map(r => r.email)).size,
     };
   }, [properties, photos, reservations]);
 
-  const propertyNameById = useMemo(
+  const roomNameById = useMemo(
     () => Object.fromEntries(properties.map(p => [p.id, p.title])),
     [properties],
   );
 
-  const filteredProperties = useMemo(() => {
+  const filteredRooms = useMemo(() => {
     const q = propertySearch.toLowerCase().trim();
     if (!q) return properties;
     return properties.filter(p =>
@@ -333,7 +340,7 @@ function AdminPanel() {
   };
 
   const cycleReservationStatus = async (r: DbReservation) => {
-    const next: Record<string, string> = { pendente: "confirmada", confirmada: "cancelada", cancelada: "pendente" };
+    const next: Record<string, string> = { pendente: "confirmada", confirmada: "checkin", checkin: "checkout", checkout: "cancelada", cancelada: "pendente" };
     await supabase.from("reservations").update({ status: next[r.status] as DbReservation["status"] }).eq("id", r.id);
     fetchAll();
   };
@@ -356,9 +363,9 @@ function AdminPanel() {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3">
           <Badge className="w-fit bg-primary/10 text-primary">Painel Administrativo</Badge>
-          <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Gestão completa de operação imobiliária</h1>
+          <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Gestão completa de hotel e reservas</h1>
           <p className="max-w-3xl text-muted-foreground">
-            Logado como <strong>{user.email}</strong>
+            Logado como <strong>{user.email}</strong> • Hotel Paradise Beach
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={signOut} className="shrink-0 gap-2">
@@ -375,44 +382,45 @@ function AdminPanel() {
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardDescription>Imóveis cadastrados</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><Home className="h-6 w-6 text-primary" />{dashboardMetrics.totalProperties}</CardTitle>
+                <CardDescription>Quartos disponíveis</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><Home className="h-6 w-6 text-primary" />{dashboardMetrics.totalRooms}</CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardDescription>Fotos no sistema</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><Camera className="h-6 w-6 text-primary" />{dashboardMetrics.totalPhotos}</CardTitle>
+                <CardDescription>Taxa de ocupação</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><Sparkles className="h-6 w-6 text-primary" />{dashboardMetrics.occupancyRate}%</CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardDescription>Reservas confirmadas</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><CalendarDays className="h-6 w-6 text-primary" />{dashboardMetrics.confirmedBookings}</CardTitle>
+                <CardDescription>Hóspedes check-in</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><Users className="h-6 w-6 text-primary" />{dashboardMetrics.checkedInBookings}</CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardDescription>Hóspedes únicos</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><Users className="h-6 w-6 text-primary" />{dashboardMetrics.totalGuests}</CardTitle>
+                <CardDescription>Receita mensal</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><CalendarDays className="h-6 w-6 text-primary" />{formatPrice(dashboardMetrics.monthlyRevenue)}</CardTitle>
               </CardHeader>
             </Card>
           </div>
 
           <Tabs defaultValue="properties" className="mt-8 space-y-4">
             <TabsList className="h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0">
-              <TabsTrigger value="properties">Propriedades</TabsTrigger>
+              <TabsTrigger value="rooms">Quartos</TabsTrigger>
               <TabsTrigger value="photos">Fotos</TabsTrigger>
-              <TabsTrigger value="reservations">Reservas</TabsTrigger>
-              <TabsTrigger value="crm">CRM & receita</TabsTrigger>
+              <TabsTrigger value="bookings">Reservas</TabsTrigger>
+              <TabsTrigger value="guests">Hóspedes</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
-            {/* ---- PROPRIEDADES ---- */}
-            <TabsContent value="properties" className="space-y-5">
+            {/* ---- QUARTOS ---- */}
+            <TabsContent value="rooms" className="space-y-5">
               <Card>
                 <CardHeader>
-                  <CardTitle>Novo imóvel</CardTitle>
-                  <CardDescription>Cadastro rápido para alimentar o catálogo comercial.</CardDescription>
+                  <CardTitle>Novo quarto</CardTitle>
+                  <CardDescription>Cadastro de quarto com detalhes e fotos.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={addProperty} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -438,12 +446,12 @@ function AdminPanel() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="type">Tipo</Label>
-                      <select id="type" value={propertyForm.type} onChange={(e) => setPropertyForm(prev => ({ ...prev, type: e.target.value as DbProperty["type"] }))} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
-                        <option value="casa">Casa</option>
-                        <option value="villa">Villa</option>
-                        <option value="apartamento">Apartamento</option>
-                        <option value="terreno">Terreno</option>
-                      </select>
+                       <select id="type" value={propertyForm.type} onChange={(e) => setPropertyForm(prev => ({ ...prev, type: e.target.value as DbProperty["type"] }))} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                         <option value="casa">Quarto Simples</option>
+                         <option value="villa">Quarto Duplo</option>
+                         <option value="apartamento">Suíte</option>
+                         <option value="terreno">Quarto Família</option>
+                       </select>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="listing">Operação</Label>
@@ -453,7 +461,7 @@ function AdminPanel() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="bedrooms">Quartos</Label>
+                       <Label htmlFor="bedrooms">Capacidade (hóspedes)</Label>
                       <Input id="bedrooms" type="number" min={0} value={propertyForm.bedrooms} onChange={(e) => setPropertyForm(prev => ({ ...prev, bedrooms: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5">
@@ -489,7 +497,7 @@ function AdminPanel() {
                        )}
                      </div>
                      <div className="md:col-span-2 xl:col-span-3">
-                       <Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar imóvel</Button>
+                       <Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar quarto</Button>
                      </div>
                   </form>
                 </CardContent>
@@ -497,15 +505,15 @@ function AdminPanel() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Catálogo de imóveis</CardTitle>
-                  <CardDescription>Busque por título, cidade ou localização.</CardDescription>
+                  <CardTitle>Catálogo de quartos</CardTitle>
+                  <CardDescription>Gerencie quartos disponíveis no hotel.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Input placeholder="Buscar imóvel..." value={propertySearch} onChange={(e) => setPropertySearch(e.target.value)} />
-                  {filteredProperties.length === 0 && (
-                    <p className="py-8 text-center text-muted-foreground">Nenhum imóvel cadastrado.</p>
-                  )}
-                  {filteredProperties.map((property) => (
+                  <Input placeholder="Buscar quarto..." value={propertySearch} onChange={(e) => setPropertySearch(e.target.value)} />
+                   {filteredRooms.length === 0 && (
+                     <p className="py-8 text-center text-muted-foreground">Nenhum quarto cadastrado.</p>
+                   )}
+                   {filteredRooms.map((property) => (
                     <div key={property.id} className="space-y-3 rounded-lg border p-4">
                       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                         <div>
@@ -524,11 +532,11 @@ function AdminPanel() {
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-sm">
                         <Label>Status:</Label>
-                        <select className="h-8 rounded-md border border-input bg-background px-2" value={property.status} onChange={(e) => changeStatus(property.id, e.target.value as DbProperty["status"])}>
-                          <option value="disponivel">Disponível</option>
-                          <option value="vendido">Vendido</option>
-                          <option value="alugado">Alugado</option>
-                        </select>
+                         <select className="h-8 rounded-md border border-input bg-background px-2" value={property.status} onChange={(e) => changeStatus(property.id, e.target.value as DbProperty["status"])}>
+                           <option value="disponivel">Disponível</option>
+                           <option value="alugado">Ocupado</option>
+                           <option value="vendido">Manutenção</option>
+                         </select>
                         <Badge className="bg-muted text-foreground">{property.type}</Badge>
 
                         {/* Inline photo upload */}
@@ -549,18 +557,18 @@ function AdminPanel() {
               <Card>
                 <CardHeader>
                   <CardTitle>Biblioteca de fotos ({photos.length})</CardTitle>
-                  <CardDescription>Controle publicação e escolha a capa principal de cada imóvel.</CardDescription>
+                  <CardDescription>Controle publicação e escolha a capa principal de cada quarto.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-3">
-                  {photos.length === 0 && (
-                    <p className="py-8 text-center text-muted-foreground">Nenhuma foto. Faça upload pela aba Propriedades.</p>
-                  )}
+                   {photos.length === 0 && (
+                     <p className="py-8 text-center text-muted-foreground">Nenhuma foto. Faça upload pela aba Quartos.</p>
+                   )}
                   {photos.map((photo) => (
                     <div key={photo.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center">
                       <img src={photo.url} alt={photo.caption} className="h-20 w-28 shrink-0 rounded-md object-cover" />
                       <div className="flex-1">
                         <p className="font-medium">{photo.caption}</p>
-                        <p className="text-sm text-muted-foreground">{propertyNameById[photo.property_id] ?? "Imóvel removido"}</p>
+                         <p className="text-sm text-muted-foreground">{roomNameById[photo.property_id] ?? "Quarto removido"}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant={photo.cover ? "secondary" : "outline"} onClick={() => makePhotoCover(photo)}>
@@ -579,17 +587,69 @@ function AdminPanel() {
               </Card>
             </TabsContent>
 
+            {/* ---- HÓSPEDES ---- */}
+            <TabsContent value="guests" className="space-y-5">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Histórico de Hóspedes</CardTitle>
+                  <CardDescription>Visualize reservas passadas por hóspede.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {Array.from(new Set(reservations.map(r => r.email))).map(email => {
+                    const guestReservations = reservations.filter(r => r.email === email);
+                    const lastReservation = guestReservations.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                    return (
+                      <div key={email} className="rounded-lg border p-4">
+                        <p className="font-semibold">{lastReservation.guest_name}</p>
+                        <p className="text-sm text-muted-foreground">{email}</p>
+                        <p className="text-sm">Total de reservas: {guestReservations.length}</p>
+                        <p className="text-sm">Última reserva: {lastReservation.check_in} - {lastReservation.check_out}</p>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ---- ANALYTICS ---- */}
+            <TabsContent value="analytics" className="space-y-5">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" />Relatórios de Receita</CardTitle>
+                  <CardDescription>Análise financeira do hotel.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Receita total</p>
+                    <p className="text-2xl font-bold text-primary">{formatPrice(dashboardMetrics.monthlyRevenue)}</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Reservas confirmadas</p>
+                    <p className="text-2xl font-bold text-primary">{dashboardMetrics.confirmedBookings}</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Taxa de conversão</p>
+                    <p className="text-2xl font-bold text-primary">{reservations.length ? Math.round((dashboardMetrics.confirmedBookings / reservations.length) * 100) : 0}%</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Hóspedes únicos</p>
+                    <p className="text-2xl font-bold text-primary">{dashboardMetrics.totalGuests}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* ---- RESERVAS ---- */}
-            <TabsContent value="reservations" className="space-y-5">
+            <TabsContent value="bookings" className="space-y-5">
               <Card>
                 <CardHeader>
                   <CardTitle>Nova reserva</CardTitle>
-                  <CardDescription>Crie reservas manuais e acompanhe o status.</CardDescription>
+                  <CardDescription>Registre check-in manual e acompanhe reservas.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={addReservation} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="res-property">Imóvel</Label>
+                      <Label htmlFor="res-property">Quarto</Label>
                       <select id="res-property" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={reservationForm.propertyId} onChange={(e) => setReservationForm(prev => ({ ...prev, propertyId: e.target.value }))} required>
                         {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                       </select>
@@ -624,13 +684,13 @@ function AdminPanel() {
               <Card>
                 <CardHeader>
                   <CardTitle>Reservas ({filteredReservations.length})</CardTitle>
-                  <CardDescription>Filtre por status para priorizar atendimento.</CardDescription>
+                  <CardDescription>Gerencie check-ins, check-outs e status das reservas.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    {(["todas", "pendente", "confirmada", "cancelada"] as const).map(status => (
+                    {(["todas", "pendente", "confirmada", "checkin", "checkout", "cancelada"] as const).map(status => (
                       <Button key={status} size="sm" variant={reservationFilter === status ? "secondary" : "outline"} onClick={() => setReservationFilter(status)}>
-                        {status}
+                        {status === "checkin" ? "Check-in" : status === "checkout" ? "Check-out" : status}
                       </Button>
                     ))}
                   </div>
@@ -647,9 +707,9 @@ function AdminPanel() {
                             <p className="font-semibold">{reservation.guest_name}</p>
                             <Badge className={statusColor[reservation.status]}>{reservation.status}</Badge>
                           </div>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {propertyNameById[reservation.property_id]} • {reservation.check_in} a {reservation.check_out} • {formatPrice(Number(reservation.total))}
-                          </p>
+                           <p className="mt-1 text-sm text-muted-foreground">
+                             {roomNameById[reservation.property_id]} • Check-in: {reservation.check_in} • Check-out: {reservation.check_out} • {formatPrice(Number(reservation.total))}
+                           </p>
                         </button>
                       </DialogTrigger>
                       <DialogContent>
@@ -657,13 +717,14 @@ function AdminPanel() {
                           <DialogTitle>Reserva</DialogTitle>
                           <DialogDescription>Atualize o status em 1 clique.</DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-2 text-sm">
-                          <p><strong>Imóvel:</strong> {propertyNameById[reservation.property_id]}</p>
-                          <p><strong>Hóspede:</strong> {reservation.guest_name}</p>
-                          <p><strong>E-mail:</strong> {reservation.email}</p>
-                          <p><strong>Período:</strong> {reservation.check_in} até {reservation.check_out}</p>
-                          <p><strong>Total:</strong> {formatPrice(Number(reservation.total))}</p>
-                        </div>
+                         <div className="space-y-2 text-sm">
+                           <p><strong>Quarto:</strong> {roomNameById[reservation.property_id]}</p>
+                           <p><strong>Hóspede:</strong> {reservation.guest_name}</p>
+                           <p><strong>E-mail:</strong> {reservation.email}</p>
+                           <p><strong>Check-in:</strong> {reservation.check_in}</p>
+                           <p><strong>Check-out:</strong> {reservation.check_out}</p>
+                           <p><strong>Total:</strong> {formatPrice(Number(reservation.total))}</p>
+                         </div>
                         <Button onClick={() => cycleReservationStatus(reservation)}>Alterar status (atual: {reservation.status})</Button>
                       </DialogContent>
                     </Dialog>
