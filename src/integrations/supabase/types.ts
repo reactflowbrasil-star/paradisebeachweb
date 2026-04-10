@@ -14,7 +14,169 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      properties: {
+        Row: {
+          amenities: string[]
+          area: number
+          bathrooms: number
+          bedrooms: number
+          city: string
+          created_at: string
+          description: string
+          featured: boolean
+          id: string
+          lat: number | null
+          listing: Database["public"]["Enums"]["listing_type"]
+          lng: number | null
+          location: string
+          ocean_view: boolean
+          price: number
+          price_label: string | null
+          state: string
+          status: Database["public"]["Enums"]["property_status"]
+          title: string
+          type: Database["public"]["Enums"]["property_type"]
+          updated_at: string
+        }
+        Insert: {
+          amenities?: string[]
+          area?: number
+          bathrooms?: number
+          bedrooms?: number
+          city?: string
+          created_at?: string
+          description?: string
+          featured?: boolean
+          id?: string
+          lat?: number | null
+          listing?: Database["public"]["Enums"]["listing_type"]
+          lng?: number | null
+          location?: string
+          ocean_view?: boolean
+          price?: number
+          price_label?: string | null
+          state?: string
+          status?: Database["public"]["Enums"]["property_status"]
+          title: string
+          type?: Database["public"]["Enums"]["property_type"]
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string[]
+          area?: number
+          bathrooms?: number
+          bedrooms?: number
+          city?: string
+          created_at?: string
+          description?: string
+          featured?: boolean
+          id?: string
+          lat?: number | null
+          listing?: Database["public"]["Enums"]["listing_type"]
+          lng?: number | null
+          location?: string
+          ocean_view?: boolean
+          price?: number
+          price_label?: string | null
+          state?: string
+          status?: Database["public"]["Enums"]["property_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["property_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      property_photos: {
+        Row: {
+          caption: string
+          cover: boolean
+          created_at: string
+          id: string
+          property_id: string
+          published: boolean
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          caption?: string
+          cover?: boolean
+          created_at?: string
+          id?: string
+          property_id: string
+          published?: boolean
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          caption?: string
+          cover?: boolean
+          created_at?: string
+          id?: string
+          property_id?: string
+          published?: boolean
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_photos_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservations: {
+        Row: {
+          check_in: string
+          check_out: string
+          created_at: string
+          email: string
+          guest_name: string
+          id: string
+          notes: string | null
+          property_id: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          created_at?: string
+          email: string
+          guest_name: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          email?: string
+          guest_name?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +185,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      listing_type: "venda" | "aluguel"
+      property_status: "disponivel" | "vendido" | "alugado"
+      property_type: "casa" | "villa" | "apartamento" | "terreno"
+      reservation_status: "confirmada" | "pendente" | "cancelada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +315,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      listing_type: ["venda", "aluguel"],
+      property_status: ["disponivel", "vendido", "alugado"],
+      property_type: ["casa", "villa", "apartamento", "terreno"],
+      reservation_status: ["confirmada", "pendente", "cancelada"],
+    },
   },
 } as const
