@@ -16,7 +16,6 @@ import NotFound from "./pages/NotFound";
 import AdminPanel from "./pages/AdminPanel";
 import { useWebflowEffects } from "@/hooks/use-webflow-effects";
 import IntroSlides from "@/components/IntroSlides";
-import { HotelAdminProvider } from "@/lib/hotel-admin";
 
 const queryClient = new QueryClient();
 
@@ -48,14 +47,12 @@ function AppShell() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
-      <HotelAdminProvider>
-        <TooltipProvider>
-          <Sonner />
-          <BrowserRouter>
-            <AppShell />
-          </BrowserRouter>
-        </TooltipProvider>
-      </HotelAdminProvider>
+      <TooltipProvider>
+        <Sonner />
+        <BrowserRouter>
+          <AppShell />
+        </BrowserRouter>
+      </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
 );

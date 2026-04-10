@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import SectionTitle from "@/components/SectionTitle";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { toast } from "sonner";
-import { CONTACT_ADDRESS_LINES, CONTACT_EMAIL, CONTACT_PHONE_DISPLAY, CONTACT_WHATSAPP_URL } from "@/lib/contact";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
@@ -26,8 +25,9 @@ export default function Contact() {
     resolver: zodResolver(contactSchema),
   });
 
-  const onSubmit = async (_data: ContactForm) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  const onSubmit = async (data: ContactForm) => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
     toast.success("Mensagem enviada com sucesso! Retornaremos em breve.");
     reset();
   };
@@ -37,53 +37,54 @@ export default function Contact() {
       <div className="mobile-shell mx-auto">
         <SectionTitle label="Contato" title="Fale Conosco" subtitle="Estamos prontos para ajudá-lo a encontrar o imóvel dos seus sonhos." />
 
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 lg:grid-cols-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
+          {/* Form */}
           <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 rounded-lg bg-card p-8 shadow-luxury">
+            <form onSubmit={handleSubmit(onSubmit)} className="bg-card p-8 rounded-lg shadow-luxury space-y-5">
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Nome completo</label>
+                <label className="text-sm font-medium text-foreground mb-1 block">Nome completo</label>
                 <input
                   {...register("name")}
-                  className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground"
                   placeholder="Seu nome"
                 />
-                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
+                {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">E-mail</label>
+                  <label className="text-sm font-medium text-foreground mb-1 block">E-mail</label>
                   <input
                     {...register("email")}
                     type="email"
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground"
                     placeholder="seu@email.com"
                   />
-                  {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+                  {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">Telefone</label>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Telefone</label>
                   <input
                     {...register("phone")}
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground"
                     placeholder="(00) 00000-0000"
                   />
-                  {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone.message}</p>}
+                  {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>}
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Mensagem</label>
+                <label className="text-sm font-medium text-foreground mb-1 block">Mensagem</label>
                 <textarea
                   {...register("message")}
                   rows={5}
-                  className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground resize-none"
                   placeholder="Como podemos ajudá-lo?"
                 />
-                {errors.message && <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>}
+                {errors.message && <p className="text-sm text-red-500 mt-1">{errors.message.message}</p>}
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="button-pop flex w-full items-center justify-center gap-2 rounded-full bg-gradient-gold py-4 font-semibold text-gold-foreground transition-all hover:shadow-gold disabled:cursor-not-allowed disabled:opacity-50"
+                className="button-pop w-full bg-gradient-gold text-gold-foreground py-4 rounded-full font-semibold flex items-center justify-center gap-2 hover:shadow-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 data-magnetic
               >
                 <Send size={16} /> {isSubmitting ? "Enviando..." : "Enviar Mensagem"}
@@ -91,59 +92,47 @@ export default function Contact() {
             </form>
           </motion.div>
 
+          {/* Info */}
           <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-8">
             <div>
-              <h3 className="mb-6 font-serif text-2xl font-bold text-foreground">Informações de Contato</h3>
+              <h3 className="font-serif text-2xl font-bold text-foreground mb-6">Informações de Contato</h3>
               <div className="space-y-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent"><Phone size={20} className="text-primary" /></div>
+                  <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><Phone size={20} className="text-primary" /></div>
                   <div>
                     <p className="font-medium text-foreground">Telefone</p>
-                    <p className="text-muted-foreground">{CONTACT_PHONE_DISPLAY}</p>
+                    <p className="text-muted-foreground">(81) 9229-2821</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent"><Phone size={20} className="text-primary" /></div>
+                  <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><Phone size={20} className="text-primary" /></div>
                   <div>
                     <p className="font-medium text-foreground">WhatsApp</p>
-                    <p className="text-muted-foreground">{CONTACT_PHONE_DISPLAY}</p>
+                    <p className="text-muted-foreground">+55 81 9652-0169</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent"><Mail size={20} className="text-primary" /></div>
+                  <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><Mail size={20} className="text-primary" /></div>
                   <div>
                     <p className="font-medium text-foreground">E-mail</p>
-                    <p className="text-muted-foreground break-all">{CONTACT_EMAIL}</p>
+                    <p className="text-muted-foreground">reservaparadisebeach@gmail.com</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent"><MapPin size={20} className="text-primary" /></div>
+                  <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><MapPin size={20} className="text-primary" /></div>
                   <div>
                     <p className="font-medium text-foreground">Endereço</p>
-                    <div className="text-muted-foreground">
-                      {CONTACT_ADDRESS_LINES.map((line) => (
-                        <p key={line}>{line}</p>
-                      ))}
-                    </div>
+                    <p className="text-muted-foreground">Av. Fernando Luiz Henrique<br />João Pessoa, PB — CEP 58037-051</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent"><Clock size={20} className="text-primary" /></div>
+                  <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><Clock size={20} className="text-primary" /></div>
                   <div>
                     <p className="font-medium text-foreground">Horário de Atendimento</p>
-                    <p className="text-muted-foreground">Seg a Sex: 9h às 18h<br />Sáb: 9h às 13h</p>
+                    <p className="text-muted-foreground">Seg — Sex: 9h às 18h<br />Sáb: 9h às 13h</p>
                   </div>
                 </div>
               </div>
-              <a
-                href={CONTACT_WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="button-pop mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-4 font-semibold text-primary-foreground transition-all hover:shadow-luxury"
-                data-magnetic
-              >
-                Falar via WhatsApp
-              </a>
             </div>
           </motion.div>
         </div>

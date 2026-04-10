@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Instagram, Facebook } from "lucide-react";
 import logoImg from "@/assets/logo-paradise.png";
-import { CONTACT_ADDRESS_LINES, CONTACT_EMAIL, CONTACT_PHONE_DISPLAY } from "@/lib/contact";
 
 export default function Footer() {
   return (
@@ -33,9 +32,9 @@ export default function Footer() {
           <div>
             <h4 className="font-serif text-lg font-semibold mb-4">Contato</h4>
             <div className="flex flex-col gap-3 text-sm text-primary-foreground/70">
-              <span className="flex items-center gap-2"><Phone size={16} className="text-gold" /> {CONTACT_PHONE_DISPLAY}</span>
-              <span className="flex items-center gap-2"><Mail size={16} className="text-gold" /> {CONTACT_EMAIL}</span>
-              <span className="flex items-start gap-2"><MapPin size={16} className="text-gold mt-0.5 shrink-0" /> {CONTACT_ADDRESS_LINES.join(" · ")}</span>
+              <span className="flex items-center gap-2"><Phone size={16} className="text-gold" /> (81) 9229-2821</span>
+              <span className="flex items-center gap-2"><Mail size={16} className="text-gold" /> reservaparadisebeach@gmail.com</span>
+              <span className="flex items-center gap-2"><MapPin size={16} className="text-gold" /> Av. Fernando Luiz Henrique, João Pessoa — PB</span>
             </div>
           </div>
 
