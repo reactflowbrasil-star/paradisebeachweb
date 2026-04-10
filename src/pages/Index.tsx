@@ -144,11 +144,17 @@ export default function Index() {
           <div data-reveal>
             <SectionTitle label="Portfólio" title="Imóveis em Destaque" subtitle="Propriedades excepcionais selecionadas para você." />
           </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 sm:gap-8">
-            {featured.map((p, i) => (
-              <PropertyCard key={p.id} property={p} index={i} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          ) : featured.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">Nenhum imóvel em destaque no momento.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 sm:gap-8">
+              {featured.map((p, i) => (
+                <PropertyCard key={p.id} property={p} index={i} />
+              ))}
+            </div>
+          )}
           <div className="mt-10 text-center" data-reveal>
             <Link to="/venda" className="button-pop inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-semibold text-primary-foreground hover:shadow-luxury">
               Ver Todos os Imóveis <ArrowRight size={18} />
