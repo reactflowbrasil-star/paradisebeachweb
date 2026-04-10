@@ -168,6 +168,7 @@ function AdminPanel() {
   // ---- CRUD ----
   const addProperty = async (e: FormEvent) => {
     e.preventDefault();
+    console.log("Adding property with payload:", propertyForm);
     const payload: TablesInsert<"properties"> = {
       title: propertyForm.title,
       type: propertyForm.type,
@@ -181,8 +182,13 @@ function AdminPanel() {
       bathrooms: Number(propertyForm.bathrooms),
       area: Number(propertyForm.area),
     };
+    console.log("Insert payload:", payload);
     const { error } = await supabase.from("properties").insert(payload);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      console.error("Insert error:", error);
+      toast.error(`Erro ao cadastrar: ${error.message}`);
+      return;
+    }
     toast.success("Imóvel cadastrado!");
     setPropertyForm({ title: "", type: "casa", listing: "venda", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0" });
     fetchAll();
