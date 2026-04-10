@@ -35,7 +35,9 @@ describe("PropertyCard", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(`${mockProperty.location}, ${mockProperty.city}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`${mockProperty.location}, ${mockProperty.city} - ${mockProperty.state}`),
+    ).toBeInTheDocument();
   });
 
   it("has correct link to property detail", () => {

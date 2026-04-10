@@ -27,7 +27,7 @@ const statusColor: Record<string, string> = {
 };
 
 function LoginForm({ onLogin }: { onLogin: () => void }) {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, configured, configError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,6 +57,15 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {!configured ? (
+            <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
+              <p className="font-medium">Supabase não configurado</p>
+              <p>{configError}</p>
+              <p className="mt-2 text-muted-foreground">
+                Use `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` no `.env`. Se seu projeto ainda usa a chave antiga, `VITE_SUPABASE_ANON_KEY` também é aceita.
+              </p>
+            </div>
+          ) : null}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email">E-mail</Label>
@@ -66,7 +75,7 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
               <Label htmlFor="password">Senha</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !configured}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isSignUp ? "Criar conta" : "Entrar"}
             </Button>

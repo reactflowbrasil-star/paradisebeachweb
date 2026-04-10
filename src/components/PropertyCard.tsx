@@ -52,7 +52,7 @@ export default function PropertyCard({ property, index = 0 }: Props) {
         <div className="p-5">
           <div className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin size={12} />
-            <span>{property.location}, {property.city} — {property.state}</span>
+            <span>{property.location}, {property.city} - {property.state}</span>
           </div>
           <h3 className="mb-2 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
             {property.title}
@@ -63,10 +63,11 @@ export default function PropertyCard({ property, index = 0 }: Props) {
           <div className="flex items-center gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
             {property.bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} /> {property.bedrooms}</span>}
             {property.bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} /> {property.bathrooms}</span>}
-            <span className="flex items-center gap-1"><Maximize size={14} /> {property.area}m²</span>
+            <span className="flex items-center gap-1"><Maximize size={14} /> {property.area}m2</span>
           </div>
         </div>
       </Link>
     </motion.div>
   );
 }
+
