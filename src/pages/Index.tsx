@@ -35,6 +35,7 @@ const testimonials = [
 ];
 
 export default function Index() {
+  const { properties, loading } = useProperties();
   const featured = properties.filter((p) => p.featured).slice(0, 6);
   const [slideIndex, setSlideIndex] = useState(0);
 
