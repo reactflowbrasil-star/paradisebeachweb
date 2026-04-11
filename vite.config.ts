@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
   optimizeDeps: {
-    include: ["react-map-gl", "mapbox-gl"],
+    include: ["react-map-gl/mapbox", "mapbox-gl"],
   },
   build: {
     commonjsOptions: {

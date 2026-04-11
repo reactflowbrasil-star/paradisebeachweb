@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import Map, { Marker, NavigationControl, GeolocateControl, type MapRef } from "react-map-gl";
+import Map, { Marker, NavigationControl, GeolocateControl, type MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPin, Navigation } from "lucide-react";
 import { type DbProperty } from "@/lib/api";
