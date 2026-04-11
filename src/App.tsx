@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,7 +29,7 @@ function AppShell() {
       <main className="min-h-screen">
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/venda" element={<PropertiesPage listing="venda" />} />
+          <Route path="/venda" element={<Navigate to="/aluguel" replace />} />
           <Route path="/aluguel" element={<PropertiesPage listing="aluguel" />} />
           <Route path="/imovel/:id" element={<PropertyDetail />} />
           <Route path="/sobre" element={<About />} />

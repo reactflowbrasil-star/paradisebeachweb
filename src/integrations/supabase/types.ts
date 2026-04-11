@@ -37,6 +37,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["property_type"]
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
           amenities?: string[]
@@ -60,6 +61,7 @@ export type Database = {
           title: string
           type?: Database["public"]["Enums"]["property_type"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
           amenities?: string[]
@@ -83,6 +85,7 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["property_type"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }

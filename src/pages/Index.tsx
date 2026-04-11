@@ -51,19 +51,19 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>Paradise Beach - Imóveis de Luxo à Beira-Mar | Venda e Aluguel</title>
-        <meta name="description" content="Encontre imóveis de luxo à beira-mar no Paradise Beach. Villas, casas e apartamentos premium para venda e aluguel nas melhores praias do Brasil." />
-        <meta name="keywords" content="imóveis beira-mar, villas luxo, casas praia, aluguel temporada, venda imóveis litoral" />
+        <title>Paradise Beach - Imóveis de Luxo à Beira-Mar | Aluguel</title>
+        <meta name="description" content="Encontre imóveis de luxo à beira-mar no Paradise Beach. Villas, casas e apartamentos premium para aluguel nas melhores praias do Brasil." />
+        <meta name="keywords" content="imóveis beira-mar, villas luxo, casas praia, aluguel temporada" />
         <meta property="og:title" content="Paradise Beach - Imóveis de Luxo à Beira-Mar" />
-        <meta property="og:description" content="Viva o paraíso: imóveis premium à beira-mar para venda e aluguel." />
+        <meta property="og:description" content="Viva o paraíso: imóveis premium à beira-mar para aluguel." />
         <meta property="og:image" content={heroImg} />
         <meta property="og:url" content="https://paradisebeach.com" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href="https://paradisebeach.com" />
       </Helmet>
-      {/* Hero – full-screen with sliding backgrounds */}
+
+      {/* Hero */}
       <section className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden">
-        {/* Background slides */}
         <AnimatePresence mode="wait">
           <motion.img
             key={slideIndex}
@@ -78,24 +78,13 @@ export default function Index() {
             height={1080}
           />
         </AnimatePresence>
-
-        {/* Gradient overlays for readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/60 via-foreground/30 to-foreground/75" />
         <div className="absolute inset-0 mesh-overlay opacity-30" />
-
-        {/* Slide indicators */}
         <div className="absolute bottom-28 left-1/2 z-20 flex -translate-x-1/2 gap-2.5">
           {heroSlides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setSlideIndex(i)}
-              className={`h-2 rounded-full transition-all duration-500 ${i === slideIndex ? "w-8 bg-gold" : "w-2 bg-white/40"}`}
-              aria-label={`Slide ${i + 1}`}
-            />
+            <button key={i} onClick={() => setSlideIndex(i)} className={`h-2 rounded-full transition-all duration-500 ${i === slideIndex ? "w-8 bg-gold" : "w-2 bg-white/40"}`} aria-label={`Slide ${i + 1}`} />
           ))}
         </div>
-
-        {/* Content */}
         <div className="mobile-shell relative z-10 mx-auto text-center" data-reveal>
           <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
             <span className="mb-3 block text-xs font-semibold uppercase tracking-[0.3em] text-gold sm:text-sm">Imobiliária de Luxo</span>
@@ -106,11 +95,11 @@ export default function Index() {
               Descubra propriedades exclusivas nas praias mais deslumbrantes do Brasil. Viva o estilo de vida que você sempre sonhou.
             </p>
             <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
-              <Link to="/venda" data-magnetic className="button-pop rounded-full bg-gradient-gold px-7 py-3.5 text-base font-semibold text-gold-foreground hover:shadow-gold sm:px-8 sm:text-lg">
-                Ver Imóveis à Venda
+              <Link to="/aluguel" data-magnetic className="button-pop rounded-full bg-gradient-gold px-7 py-3.5 text-base font-semibold text-gold-foreground hover:shadow-gold sm:px-8 sm:text-lg">
+                Ver Imóveis para Reserva
               </Link>
-              <Link to="/aluguel" className="button-pop rounded-full border-2 border-primary-foreground/40 px-7 py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10 sm:px-8 sm:text-lg">
-                Imóveis para Alugar
+              <Link to="/contato" className="button-pop rounded-full border-2 border-primary-foreground/40 px-7 py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10 sm:px-8 sm:text-lg">
+                Fale Conosco
               </Link>
             </div>
           </motion.div>
@@ -156,7 +145,7 @@ export default function Index() {
             </div>
           )}
           <div className="mt-10 text-center" data-reveal>
-            <Link to="/venda" className="button-pop inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-semibold text-primary-foreground hover:shadow-luxury">
+            <Link to="/aluguel" className="button-pop inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-semibold text-primary-foreground hover:shadow-luxury">
               Ver Todos os Imóveis <ArrowRight size={18} />
             </Link>
           </div>
@@ -195,15 +184,8 @@ export default function Index() {
         <div className="mobile-shell relative z-10 mx-auto text-center" data-reveal>
           <SectionTitle label="Newsletter" title="Receba Novidades Exclusivas" subtitle="Cadastre-se e seja o primeiro a conhecer nossos lançamentos e oportunidades únicas." light />
           <form className="mx-auto flex w-full max-w-md flex-col gap-3 sm:max-w-xl sm:flex-row" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Seu melhor e-mail"
-              className="flex-1 rounded-full border border-primary-foreground/20 bg-card/10 px-6 py-4 text-primary-foreground backdrop-blur-sm placeholder:text-primary-foreground/50 focus:border-gold focus:outline-none"
-              aria-label="Email para newsletter"
-            />
-            <button type="submit" className="button-pop rounded-full bg-gradient-gold px-8 py-4 font-semibold text-gold-foreground hover:shadow-gold">
-              Inscrever-se
-            </button>
+            <input type="email" placeholder="Seu melhor e-mail" className="flex-1 rounded-full border border-primary-foreground/20 bg-card/10 px-6 py-4 text-primary-foreground backdrop-blur-sm placeholder:text-primary-foreground/50 focus:border-gold focus:outline-none" aria-label="Email para newsletter" />
+            <button type="submit" className="button-pop rounded-full bg-gradient-gold px-8 py-4 font-semibold text-gold-foreground hover:shadow-gold">Inscrever-se</button>
           </form>
         </div>
       </section>
