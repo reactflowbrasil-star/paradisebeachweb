@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { api, type DbPhoto, type DbProperty } from "@/lib/api";
+import { api, type DbPhoto, type DbProperty, getImageUrl } from "@/lib/api";
 import {
   Camera,
   CheckCircle2,
@@ -251,7 +251,7 @@ export default function AdminPhotos() {
             <Card key={photo.id} className="group overflow-hidden border-slate-200 transition hover:shadow-md">
               <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                 <img
-                  src={photo.url}
+                  src={getImageUrl(photo.url)}
                   alt={photo.caption}
                   className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                 />

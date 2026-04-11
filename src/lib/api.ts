@@ -72,8 +72,15 @@ const runtimeApiBaseUrl = (() => {
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || runtimeApiBaseUrl).replace(/\/$/, "");
 
-function apiUrl(path: string) {
+export function apiUrl(path: string) {
   return `${API_BASE_URL}${path}`;
+}
+
+export function getImageUrl(path: string) {
+  if (!path) return "/placeholder.svg";
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+  if (path.startsWith("/")) return `${API_BASE_URL}${path}`;
+  return `${API_BASE_URL}/${path}`;
 }
 
 async function parseResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
@@ -147,7 +154,7 @@ export const api = {
   uploadPhotos: async (propertyId: string, files: File[]) => {
     const formData = new FormData();
     formData.append("property_id", propertyId);
-    files.forEach((file) => formData.append("photos", file));
+    files.forEach((file) => formData.append("photos[]", file));
 
     const response = await fetch(apiUrl("/api/upload-photos.php"), {
       method: "POST",

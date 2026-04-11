@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type DbPhoto, type DbProperty } from "@/lib/api";
+import { api, type DbPhoto, type DbProperty, getImageUrl } from "@/lib/api";
 
 export type { DbPhoto, DbProperty } from "@/lib/api";
 
@@ -44,7 +44,7 @@ function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
 
   const images =
     propertyPhotos.length > 0
-      ? propertyPhotos.map((ph) => ph.url)
+      ? propertyPhotos.map((ph) => getImageUrl(ph.url))
       : ["/placeholder.svg"];
 
   return {
