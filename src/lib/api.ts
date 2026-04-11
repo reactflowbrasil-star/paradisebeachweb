@@ -60,8 +60,11 @@ const runtimeApiBaseUrl = (() => {
   if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
     return "";
   }
-  // Any deployed environment (lovable.app, www.paradisebeach.com.br, etc.)
-  // always hits the production API
+  // Same-origin when served from the main domain (no CORS needed)
+  if (host === "paradisebeach.com.br" || host === "www.paradisebeach.com.br") {
+    return "";
+  }
+  // External domains (lovable.app, etc.) → cross-origin to production API
   return "https://paradisebeach.com.br";
 })();
 

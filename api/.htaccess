@@ -1,0 +1,26 @@
+# CORS — Allow preflight from approved origins
+# This file MUST be deployed to the /api/ folder on the server
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Let PHP handle OPTIONS so it can set dynamic Origin headers
+    # (ensures Apache doesn't block the request before PHP runs)
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^ - [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Cache preflight for 24h
+    Header always set Access-Control-Max-Age "86400"
+
+    # Set CORS headers for allowed origins (dynamic via PHP)
+    # These headers are set as fallback; PHP overrides with the correct Origin
+    Header always set Access-Control-Allow-Methods "GET, POST, PATCH, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+    # For OPTIONS responses that Apache handles before PHP
+    # We set a wildcard origin as fallback — PHP will override with specific origin
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    Header always set Access-Control-Allow-Origin "*" env=!PHP_ORIGIN_SET
+</IfModule>

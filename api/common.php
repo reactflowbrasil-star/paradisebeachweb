@@ -13,13 +13,27 @@ function apply_cors(): void
     ];
 
     $origin = $_SERVER["HTTP_ORIGIN"] ?? "";
+
+    // Also check Referer as fallback (some proxies strip Origin)
+    if ($origin === "" && isset($_SERVER["HTTP_REFERER"])) {
+        $parsed = parse_url($_SERVER["HTTP_REFERER"]);
+        if ($parsed !== false && isset($parsed["scheme"], $parsed["host"])) {
+            $origin = $parsed["scheme"] . "://" . $parsed["host"];
+            if (isset($parsed["port"])) {
+                $origin .= ":" . $parsed["port"];
+            }
+        }
+    }
+
     if (in_array($origin, $allowedOrigins, true)) {
         header("Access-Control-Allow-Origin: " . $origin);
         header("Vary: Origin");
     }
 
+    // Always send these on every response
     header("Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    header("Access-Control-Max-Age: 86400");
 }
 
 apply_cors();
