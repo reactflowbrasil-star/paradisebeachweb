@@ -3,8 +3,9 @@ import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import PropertyCard from "@/components/PropertyCard";
 import { properties } from "@/data/properties";
+import type { Property } from "@/hooks/useProperties";
 
-const mockProperty = properties[0];
+const mockProperty: Property = { ...properties[0], whatsapp: "" };
 
 describe("PropertyCard", () => {
   it("renders property title", () => {
