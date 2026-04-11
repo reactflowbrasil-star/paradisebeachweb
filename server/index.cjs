@@ -39,9 +39,7 @@ function mapProperty(row) {
     lng: row.lng === null ? null : Number(row.lng),
     ocean_view: Boolean(row.ocean_view),
     featured: Boolean(row.featured),
-    amenities: Array.isArray(row.amenities)
-      ? row.amenities
-      : JSON.parse(row.amenities || "[]"),
+    amenities: Array.isArray(row.amenities) ? row.amenities : JSON.parse(row.amenities || "[]"),
   };
 }
 
@@ -66,7 +64,7 @@ async function query(sql, params) {
   return rows;
 }
 
-app.post("/api/auth/login", (req, res) => {
+function loginHandler(req, res) {
   const { email, password } = req.body || {};
   if (email !== adminEmail || password !== adminPassword) {
     return res.status(401).json({ message: "Credenciais inválidas." });
@@ -76,22 +74,23 @@ app.post("/api/auth/login", (req, res) => {
     user: { email: adminEmail },
     token: Buffer.from(`${adminEmail}:ok`).toString("base64"),
   });
-});
+}
 
-app.get("/api/properties", async (_req, res) => {
+async function listProperties(_req, res) {
   const rows = await query("SELECT * FROM properties ORDER BY created_at DESC");
   res.json(rows.map(mapProperty));
-});
+}
 
-app.get("/api/properties/:id", async (req, res) => {
-  const rows = await query("SELECT * FROM properties WHERE id = ?", [req.params.id]);
+async function getProperty(req, res) {
+  const id = req.params.id || req.query.id;
+  const rows = await query("SELECT * FROM properties WHERE id = ?", [id]);
   if (!rows.length) {
     return res.status(404).json({ message: "Imóvel não encontrado." });
   }
   return res.json(mapProperty(rows[0]));
-});
+}
 
-app.post("/api/properties", async (req, res) => {
+async function createProperty(req, res) {
   const payload = req.body || {};
   const id = randomUUID();
   await query(
@@ -125,9 +124,10 @@ app.post("/api/properties", async (req, res) => {
 
   const created = await query("SELECT * FROM properties WHERE id = ?", [id]);
   res.status(201).json(mapProperty(created[0]));
-});
+}
 
-app.patch("/api/properties/:id", async (req, res) => {
+async function updateProperty(req, res) {
+  const id = req.params.id || req.query.id;
   const payload = req.body || {};
   const fields = Object.entries(payload);
   if (!fields.length) {
@@ -143,27 +143,28 @@ app.patch("/api/properties/:id", async (req, res) => {
     columns.push(`${key} = ?`);
     values.push(value);
   }
-  values.push(req.params.id);
+  values.push(id);
 
   await query(`UPDATE properties SET ${columns.join(", ")} WHERE id = ?`, values);
-  const updated = await query("SELECT * FROM properties WHERE id = ?", [req.params.id]);
+  const updated = await query("SELECT * FROM properties WHERE id = ?", [id]);
   if (!updated.length) {
     return res.status(404).json({ message: "Imóvel não encontrado." });
   }
   return res.json(mapProperty(updated[0]));
-});
+}
 
-app.delete("/api/properties/:id", async (req, res) => {
-  await query("DELETE FROM properties WHERE id = ?", [req.params.id]);
+async function removeProperty(req, res) {
+  const id = req.params.id || req.query.id;
+  await query("DELETE FROM properties WHERE id = ?", [id]);
   res.status(204).end();
-});
+}
 
-app.get("/api/photos", async (_req, res) => {
+async function listPhotos(_req, res) {
   const rows = await query("SELECT * FROM property_photos ORDER BY created_at DESC");
   res.json(rows.map(mapPhoto));
-});
+}
 
-app.post("/api/photos/upload", upload.array("photos"), async (req, res) => {
+async function uploadPhotos(req, res) {
   const propertyId = req.body.property_id;
   const files = req.files || [];
   const created = [];
@@ -181,12 +182,13 @@ app.post("/api/photos/upload", upload.array("photos"), async (req, res) => {
   }
 
   res.status(201).json(created);
-});
+}
 
-app.patch("/api/photos/:id", async (req, res) => {
+async function updatePhoto(req, res) {
+  const id = req.params.id || req.query.id;
   const payload = req.body || {};
   if (payload.cover) {
-    const rows = await query("SELECT property_id FROM property_photos WHERE id = ?", [req.params.id]);
+    const rows = await query("SELECT property_id FROM property_photos WHERE id = ?", [id]);
     if (rows.length) {
       await query("UPDATE property_photos SET cover = 0 WHERE property_id = ?", [rows[0].property_id]);
     }
@@ -204,34 +206,35 @@ app.patch("/api/photos/:id", async (req, res) => {
     columns.push(`${key} = ?`);
     values.push(value);
   }
-  values.push(req.params.id);
+  values.push(id);
 
   await query(`UPDATE property_photos SET ${columns.join(", ")} WHERE id = ?`, values);
-  const updated = await query("SELECT * FROM property_photos WHERE id = ?", [req.params.id]);
+  const updated = await query("SELECT * FROM property_photos WHERE id = ?", [id]);
   if (!updated.length) {
     return res.status(404).json({ message: "Foto não encontrada." });
   }
   return res.json(mapPhoto(updated[0]));
-});
+}
 
-app.delete("/api/photos/:id", async (req, res) => {
-  const rows = await query("SELECT * FROM property_photos WHERE id = ?", [req.params.id]);
+async function removePhoto(req, res) {
+  const id = req.params.id || req.query.id;
+  const rows = await query("SELECT * FROM property_photos WHERE id = ?", [id]);
   if (rows.length) {
     const filePath = path.join(__dirname, "..", rows[0].url.replace(/^\//, ""));
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
   }
-  await query("DELETE FROM property_photos WHERE id = ?", [req.params.id]);
+  await query("DELETE FROM property_photos WHERE id = ?", [id]);
   res.status(204).end();
-});
+}
 
-app.get("/api/reservations", async (_req, res) => {
+async function listReservations(_req, res) {
   const rows = await query("SELECT * FROM reservations ORDER BY created_at DESC");
   res.json(rows.map(mapReservation));
-});
+}
 
-app.post("/api/reservations", async (req, res) => {
+async function createReservation(req, res) {
   const payload = req.body || {};
   const id = randomUUID();
   await query(
@@ -252,25 +255,57 @@ app.post("/api/reservations", async (req, res) => {
   );
   const created = await query("SELECT * FROM reservations WHERE id = ?", [id]);
   res.status(201).json(mapReservation(created[0]));
-});
+}
 
-app.patch("/api/reservations/:id", async (req, res) => {
+async function updateReservation(req, res) {
+  const id = req.params.id || req.query.id;
   const payload = req.body || {};
   const fields = Object.entries(payload);
   if (!fields.length) {
     return res.status(400).json({ message: "Nenhum campo para atualizar." });
   }
+
   const columns = fields.map(([key]) => `${key} = ?`);
   const values = fields.map(([, value]) => value);
-  values.push(req.params.id);
+  values.push(id);
 
   await query(`UPDATE reservations SET ${columns.join(", ")} WHERE id = ?`, values);
-  const updated = await query("SELECT * FROM reservations WHERE id = ?", [req.params.id]);
+  const updated = await query("SELECT * FROM reservations WHERE id = ?", [id]);
   if (!updated.length) {
     return res.status(404).json({ message: "Reserva não encontrada." });
   }
   return res.json(mapReservation(updated[0]));
-});
+}
+
+app.post("/api/auth/login", loginHandler);
+app.post("/api/auth/login.php", loginHandler);
+
+app.get("/api/properties", listProperties);
+app.get("/api/properties.php", listProperties);
+app.post("/api/properties", createProperty);
+app.post("/api/properties.php", createProperty);
+app.get("/api/properties/:id", getProperty);
+app.get("/api/property.php", getProperty);
+app.patch("/api/properties/:id", updateProperty);
+app.patch("/api/property.php", updateProperty);
+app.delete("/api/properties/:id", removeProperty);
+app.delete("/api/property.php", removeProperty);
+
+app.get("/api/photos", listPhotos);
+app.get("/api/photos.php", listPhotos);
+app.post("/api/photos/upload", upload.array("photos"), uploadPhotos);
+app.post("/api/upload-photos.php", upload.array("photos"), uploadPhotos);
+app.patch("/api/photos/:id", updatePhoto);
+app.patch("/api/photo.php", updatePhoto);
+app.delete("/api/photos/:id", removePhoto);
+app.delete("/api/photo.php", removePhoto);
+
+app.get("/api/reservations", listReservations);
+app.get("/api/reservations.php", listReservations);
+app.post("/api/reservations", createReservation);
+app.post("/api/reservations.php", createReservation);
+app.patch("/api/reservations/:id", updateReservation);
+app.patch("/api/reservation.php", updateReservation);
 
 app.listen(port, () => {
   console.log(`API ready on http://localhost:${port}`);

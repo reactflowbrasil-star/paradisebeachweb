@@ -108,31 +108,31 @@ async function request<T>(input: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   login: (email: string, password: string) =>
-    request<{ token: string; user: { email: string } }>("/api/auth/login", {
+    request<{ token: string; user: { email: string } }>("/api/auth/login.php", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
-  getProperties: () => request<DbProperty[]>("/api/properties"),
-  getProperty: (id: string) => request<DbProperty>(`/api/properties/${id}`),
+  getProperties: () => request<DbProperty[]>("/api/properties.php"),
+  getProperty: (id: string) => request<DbProperty>(`/api/property.php?id=${encodeURIComponent(id)}`),
   createProperty: (payload: Partial<DbProperty>) =>
-    request<DbProperty>("/api/properties", {
+    request<DbProperty>("/api/properties.php", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   updateProperty: (id: string, payload: Partial<DbProperty>) =>
-    request<DbProperty>(`/api/properties/${id}`, {
+    request<DbProperty>(`/api/property.php?id=${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
   deleteProperty: (id: string) =>
-    request<void>(`/api/properties/${id}`, { method: "DELETE" }),
-  getPhotos: () => request<DbPhoto[]>("/api/photos"),
+    request<void>(`/api/property.php?id=${encodeURIComponent(id)}`, { method: "DELETE" }),
+  getPhotos: () => request<DbPhoto[]>("/api/photos.php"),
   uploadPhotos: async (propertyId: string, files: File[]) => {
     const formData = new FormData();
     formData.append("property_id", propertyId);
     files.forEach((file) => formData.append("photos", file));
 
-    const response = await fetch(apiUrl("/api/photos/upload"), {
+    const response = await fetch(apiUrl("/api/upload-photos.php"), {
       method: "POST",
       body: formData,
     });
@@ -147,19 +147,19 @@ export const api = {
     return parseResponse<DbPhoto[]>(response, "Resposta inválida ao enviar fotos.");
   },
   updatePhoto: (id: string, payload: Partial<DbPhoto>) =>
-    request<DbPhoto>(`/api/photos/${id}`, {
+    request<DbPhoto>(`/api/photo.php?id=${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
-  deletePhoto: (id: string) => request<void>(`/api/photos/${id}`, { method: "DELETE" }),
-  getReservations: () => request<DbReservation[]>("/api/reservations"),
+  deletePhoto: (id: string) => request<void>(`/api/photo.php?id=${encodeURIComponent(id)}`, { method: "DELETE" }),
+  getReservations: () => request<DbReservation[]>("/api/reservations.php"),
   createReservation: (payload: Partial<DbReservation>) =>
-    request<DbReservation>("/api/reservations", {
+    request<DbReservation>("/api/reservations.php", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   updateReservation: (id: string, payload: Partial<DbReservation>) =>
-    request<DbReservation>(`/api/reservations/${id}`, {
+    request<DbReservation>(`/api/reservation.php?id=${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
