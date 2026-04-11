@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useProperty, formatPrice } from "@/hooks/useProperties";
-import { Bed, Bath, Maximize, MapPin, ArrowLeft, Phone, Share2, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bed, Bath, Maximize, MapPin, ArrowLeft, Share2, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import LazyImage from "@/components/LazyImage";
 import PropertyMap from "@/components/PropertyMap";
+import PropertyBookingForm from "@/components/PropertyBookingForm";
+import { toast } from "sonner";
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -27,8 +29,6 @@ export default function PropertyDetail() {
       </div>
     );
   }
-
-  const whatsappNumber = property.whatsapp || "5573999990000";
 
   return (
     <div className="pb-16 pt-24 sm:pt-28">
@@ -134,28 +134,25 @@ export default function PropertyDetail() {
               transition={{ delay: 0.3 }}
               className="sticky top-28"
             >
-              <div className="bg-card rounded-lg shadow-luxury p-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full uppercase">
-                    Aluguel
-                  </span>
-                  <span className="capitalize text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">{property.type}</span>
-                </div>
-                <p className="text-3xl font-bold text-primary mb-6">
-                  {formatPrice(property.price, property.priceLabel)}
-                </p>
-
-                <a
-                  href={`https://wa.me/${whatsappNumber}?text=Olá! Tenho interesse no imóvel: ${property.title}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="button-pop w-full bg-gradient-gold text-gold-foreground py-4 rounded-full font-semibold text-center block mb-3 hover:shadow-gold transition-all" data-magnetic
+              <div className="space-y-4">
+                <PropertyBookingForm property={property} />
+                
+                <button 
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: property.title,
+                        text: property.description,
+                        url: window.location.href,
+                      }).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link copiado para a área de transferência!");
+                    }
+                  }}
+                  className="w-full py-4 rounded-full border border-border text-foreground text-sm font-semibold hover:bg-muted transition-all flex items-center justify-center gap-2 bg-card"
                 >
-                  <Phone size={16} className="inline mr-2" /> Reservar via WhatsApp
-                </a>
-
-                <button className="w-full py-3 rounded-full border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2">
-                  <Share2 size={14} /> Compartilhar
+                  <Share2 size={16} /> Compartilhar Imóvel
                 </button>
               </div>
             </motion.div>

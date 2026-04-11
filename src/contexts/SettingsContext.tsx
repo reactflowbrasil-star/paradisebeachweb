@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
 interface SettingsContextType {
-  settings: Record<string, string>;
+  settings: Record<string, any>;
   mapboxToken: string;
   loading: boolean;
   refreshSettings: () => Promise<void>;
@@ -11,13 +11,19 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settings, setSettings] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
   const fetchSettings = async () => {
     try {
-      const data = await api.getSettings();
-      setSettings(data);
+      const [privateSettings, publicSettings] = await Promise.all([
+        api.getSettings().catch(() => ({})),
+        api.getPublicSiteSettings().catch(() => ({})),
+      ]);
+      setSettings({
+        ...privateSettings,
+        ...publicSettings,
+      });
     } catch (error) {
       console.error("Failed to fetch settings:", error);
     } finally {

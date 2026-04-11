@@ -37,11 +37,11 @@ export default function AdminSettings() {
       setIntroImg(settings.intro_img || "");
       
       try {
-        setHeroSlider(settings.hero_slider ? JSON.parse(settings.hero_slider) : []);
+        setHeroSlider(Array.isArray(settings.hero_slider) ? settings.hero_slider : settings.hero_slider ? JSON.parse(settings.hero_slider) : []);
       } catch (e) { setHeroSlider([]); }
 
       try {
-        setSiteGallery(settings.site_gallery ? JSON.parse(settings.site_gallery) : []);
+        setSiteGallery(Array.isArray(settings.site_gallery) ? settings.site_gallery : settings.site_gallery ? JSON.parse(settings.site_gallery) : []);
       } catch (e) { setSiteGallery([]); }
     }
   }, [settings]);

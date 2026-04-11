@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+﻿import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   CalendarDays,
   Camera,
   ChevronLeft,
+  FileText,
   Home,
   Loader2,
   LogOut,
@@ -20,6 +21,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  Users,
   Waves,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,8 +31,10 @@ const NAV_ITEMS = [
   { to: "/admin", icon: BarChart3, label: "Dashboard", end: true },
   { to: "/admin/propriedades", icon: Home, label: "Propriedades" },
   { to: "/admin/fotos", icon: Camera, label: "Galeria de Fotos" },
+  { to: "/admin/clientes", icon: Users, label: "Clientes" },
   { to: "/admin/reservas", icon: CalendarDays, label: "Reservas" },
-  { to: "/admin/config", icon: Settings, label: "Configurações" },
+  { to: "/admin/conteudo", icon: FileText, label: "CMS do Frontend" },
+  { to: "/admin/config", icon: Settings, label: "ConfiguraÃ§Ãµes" },
 ] as const;
 
 function SidebarNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
@@ -247,3 +251,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

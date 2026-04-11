@@ -5,7 +5,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import PropertiesPage from "./pages/PropertiesPage";
@@ -19,6 +18,8 @@ import AdminProperties from "./pages/admin/AdminProperties";
 import AdminPhotos from "./pages/admin/AdminPhotos";
 import AdminReservations from "./pages/admin/AdminReservations";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminClients from "./pages/admin/AdminClients";
+import AdminContent from "./pages/admin/AdminContent";
 import { useWebflowEffects } from "@/hooks/use-webflow-effects";
 import IntroSlides from "@/components/IntroSlides";
 import { SettingsProvider } from "@/contexts/SettingsContext";
@@ -44,7 +45,6 @@ function PublicShell() {
         </Routes>
       </main>
       <Footer />
-      <WhatsAppButton />
     </ErrorBoundary>
   );
 }
@@ -62,7 +62,9 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="propriedades" element={<AdminProperties />} />
                 <Route path="fotos" element={<AdminPhotos />} />
+                <Route path="clientes" element={<AdminClients />} />
                 <Route path="reservas" element={<AdminReservations />} />
+                <Route path="conteudo" element={<AdminContent />} />
                 <Route path="config" element={<AdminSettings />} />
               </Route>
               {/* Public routes */}
