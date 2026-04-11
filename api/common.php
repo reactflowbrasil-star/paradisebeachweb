@@ -25,7 +25,11 @@ function apply_cors(): void
         }
     }
 
-    if (in_array($origin, $allowedOrigins, true)) {
+    $host = parse_url($origin, PHP_URL_HOST) ?? "";
+    $isNetlify = str_ends_with($host, ".netlify.app");
+    $isLovable = str_ends_with($host, ".lovable.app");
+
+    if (in_array($origin, $allowedOrigins, true) || $isNetlify || $isLovable) {
         header("Access-Control-Allow-Origin: " . $origin);
         header("Vary: Origin");
     }
