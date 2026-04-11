@@ -55,10 +55,14 @@ export interface DbReservation {
 
 const runtimeApiBaseUrl = (() => {
   if (typeof window === "undefined") return "";
-  if (window.location.hostname === "www.paradisebeach.com.br") {
-    return "https://paradisebeach.com.br";
+  const host = window.location.hostname;
+  // Local dev: proxy handled by Vite
+  if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
+    return "";
   }
-  return "";
+  // Any deployed environment (lovable.app, www.paradisebeach.com.br, etc.)
+  // always hits the production API
+  return "https://paradisebeach.com.br";
 })();
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || runtimeApiBaseUrl).replace(/\/$/, "");

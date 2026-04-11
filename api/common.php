@@ -7,6 +7,7 @@ function apply_cors(): void
     $allowedOrigins = [
         "https://paradisebeach.com.br",
         "https://www.paradisebeach.com.br",
+        "https://paradisebeach.lovable.app",
         "http://localhost:8080",
         "http://127.0.0.1:8080",
     ];
