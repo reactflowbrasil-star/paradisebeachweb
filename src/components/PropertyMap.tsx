@@ -3,6 +3,7 @@ import Map, { Marker, NavigationControl, GeolocateControl, type MapRef } from "r
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPin, Navigation } from "lucide-react";
 import { type DbProperty } from "@/lib/api";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface PropertyMapProps {
   property: DbProperty;
@@ -10,7 +11,7 @@ interface PropertyMapProps {
 
 export default function PropertyMap({ property }: PropertyMapProps) {
   const mapRef = useRef<MapRef>(null);
-  const token = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
+  const { mapboxToken: token } = useSettings();
 
   const hasValidCoords =
     Number.isFinite(property.lat) &&

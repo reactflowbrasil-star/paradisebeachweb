@@ -280,6 +280,21 @@ async function updateReservation(req, res) {
   return res.json(mapReservation(updated[0]));
 }
 
+async function getSettings(_req, res) {
+  const rows = await query("SELECT * FROM settings");
+  const settings = {};
+  rows.forEach((r) => (settings[r.id] = r.value));
+  res.json(settings);
+}
+
+async function updateSettings(req, res) {
+  const payload = req.body || {};
+  for (const [key, value] of Object.entries(payload)) {
+    await query("REPLACE INTO settings (id, value) VALUES (?, ?)", [key, value]);
+  }
+  res.json({ message: "Configurações atualizadas." });
+}
+
 app.post("/api/auth/login", loginHandler);
 app.post("/api/auth/login.php", loginHandler);
 
@@ -309,6 +324,11 @@ app.post("/api/reservations", createReservation);
 app.post("/api/reservations.php", createReservation);
 app.patch("/api/reservations/:id", updateReservation);
 app.patch("/api/reservation.php", updateReservation);
+
+app.get("/api/settings", getSettings);
+app.get("/api/settings.php", getSettings);
+app.post("/api/settings", updateSettings);
+app.post("/api/settings.php", updateSettings);
 
 app.listen(port, () => {
   console.log(`API ready on http://localhost:${port}`);

@@ -180,4 +180,10 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
+  getSettings: () => request<Record<string, string>>("/api/settings.php"),
+  updateSettings: (payload: Record<string, string>) =>
+    request<{ message: string }>("/api/settings.php", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };

@@ -18,8 +18,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProperties from "./pages/admin/AdminProperties";
 import AdminPhotos from "./pages/admin/AdminPhotos";
 import AdminReservations from "./pages/admin/AdminReservations";
+import AdminSettings from "./pages/admin/AdminSettings";
 import { useWebflowEffects } from "@/hooks/use-webflow-effects";
 import IntroSlides from "@/components/IntroSlides";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 
 const queryClient = new QueryClient();
 
@@ -50,22 +52,25 @@ function PublicShell() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
-      <TooltipProvider>
-        <Sonner />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Routes>
-            {/* Admin routes — own layout, no Navbar/Footer */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="propriedades" element={<AdminProperties />} />
-              <Route path="fotos" element={<AdminPhotos />} />
-              <Route path="reservas" element={<AdminReservations />} />
-            </Route>
-            {/* Public routes */}
-            <Route path="/*" element={<PublicShell />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <SettingsProvider>
+        <TooltipProvider>
+          <Sonner />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Routes>
+              {/* Admin routes — own layout, no Navbar/Footer */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="propriedades" element={<AdminProperties />} />
+                <Route path="fotos" element={<AdminPhotos />} />
+                <Route path="reservas" element={<AdminReservations />} />
+                <Route path="config" element={<AdminSettings />} />
+              </Route>
+              {/* Public routes */}
+              <Route path="/*" element={<PublicShell />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SettingsProvider>
     </HelmetProvider>
   </QueryClientProvider>
 );

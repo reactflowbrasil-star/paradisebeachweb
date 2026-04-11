@@ -29,6 +29,7 @@ const NAV_ITEMS = [
   { to: "/admin/propriedades", icon: Home, label: "Propriedades" },
   { to: "/admin/fotos", icon: Camera, label: "Galeria de Fotos" },
   { to: "/admin/reservas", icon: CalendarDays, label: "Reservas" },
+  { to: "/admin/config", icon: Settings, label: "Configurações" },
 ] as const;
 
 function SidebarNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {

@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import MapboxPicker from "@/components/admin/MapboxPicker";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const formatPrice = (price: number, label?: string | null) =>
   `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
@@ -80,6 +81,7 @@ export default function AdminProperties() {
   const [saving, setSaving] = useState(false);
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const [coverUpdatingFor, setCoverUpdatingFor] = useState<string | null>(null);
+  const { mapboxToken } = useSettings();
 
   // New states for file uploads during creation
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -191,7 +193,7 @@ export default function AdminProperties() {
           toast.success("Endereço preenchido via CEP!");
           
           // Try to geocode the address with Mapbox for an initial marker jump
-          const token = import.meta.env.VITE_MAPBOX_TOKEN;
+          const token = mapboxToken;
           if (token) {
             const query = encodeURIComponent(`${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}, Brasil`);
             const geoRes = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${token}&limit=1`);
@@ -663,11 +665,11 @@ export default function AdminProperties() {
                 <MapboxPicker 
                   lat={form.lat ? Number(form.lat) : null}
                   lng={form.lng ? Number(form.lng) : null}
-                  onChange={(lat, lng) => setForm(f => ({ ...f, lat, lng }))}
-                  token={import.meta.env.VITE_MAPBOX_TOKEN || ""}
+                  onChange={(lat, lng) => setForm((f) => ({ ...f, lat, lng }))}
+                  token={mapboxToken}
                 />
-                {!import.meta.env.VITE_MAPBOX_TOKEN && (
-                  <p className="text-[10px] text-destructive">Aviso: VITE_MAPBOX_TOKEN não configurado no .env</p>
+                {!mapboxToken && (
+                  <p className="text-[10px] text-destructive">Aviso: Mapbox Token não configurado no Admin ou .env</p>
                 )}
               </div>
 
