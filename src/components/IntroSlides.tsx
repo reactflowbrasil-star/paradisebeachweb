@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-paradise.png";
+import { useSettings } from "@/contexts/SettingsContext";
+import { getImageUrl } from "@/lib/api";
 import heroImg from "@/assets/hero-beach.jpg";
 import sunsetImg from "@/assets/beach-sunset.jpg";
 import prop1 from "@/assets/property-1.jpg";
@@ -17,6 +19,7 @@ const phrases = [
 const bgImages = [heroImg, sunsetImg, prop1];
 
 export default function IntroSlides() {
+  const { settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   // phase: 0 = logo reveal, 1 = typewriter phrases
   const [phase, setPhase] = useState(0);
@@ -95,7 +98,7 @@ export default function IntroSlides() {
           <AnimatePresence mode="sync">
             <motion.img
               key={bgIndex}
-              src={bgImages[bgIndex]}
+              src={settings?.intro_img ? getImageUrl(settings.intro_img) : bgImages[bgIndex]}
               alt=""
               initial={{ opacity: 0, scale: 1.1 }}
               animate={{ opacity: 1, scale: 1 }}

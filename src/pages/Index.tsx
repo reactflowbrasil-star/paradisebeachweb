@@ -12,8 +12,10 @@ import { useProperties } from "@/hooks/useProperties";
 import PropertyCard from "@/components/PropertyCard";
 import SectionTitle from "@/components/SectionTitle";
 import { Loader2 } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
+import { getImageUrl } from "@/lib/api";
 
-const heroSlides = [
+const defaultHeroSlides = [
   { src: heroImg, alt: "Villa de luxo à beira-mar com piscina infinita ao pôr do sol" },
   { src: sunsetImg, alt: "Pôr do sol deslumbrante na praia paradisíaca" },
   { src: prop1, alt: "Propriedade de luxo com vista para o mar" },
@@ -36,12 +38,31 @@ const testimonials = [
 
 export default function Index() {
   const { properties, loading } = useProperties();
+  const { settings } = useSettings();
   const featured = properties.filter((p) => p.featured).slice(0, 6);
   const [slideIndex, setSlideIndex] = useState(0);
 
+  let rawHeroSlider: string[] = [];
+  let rawSiteGallery: string[] = [];
+  try {
+    if (settings?.hero_slider) rawHeroSlider = JSON.parse(settings.hero_slider);
+    if (settings?.site_gallery) rawSiteGallery = JSON.parse(settings.site_gallery);
+  } catch (e) {}
+
+  const currentHeroSlides = rawHeroSlider.length > 0 
+    ? rawHeroSlider.map(url => ({ src: getImageUrl(url), alt: "Paradise Beach - Imóvel de Luxo" }))
+    : defaultHeroSlides;
+
+  const currentGallery = rawSiteGallery.length > 0 
+    ? rawSiteGallery.map(url => getImageUrl(url)) 
+    : [];
+
+  const siteTitle = settings?.site_title || "Seu Paraíso à Beira-Mar";
+  const siteSubtitle = settings?.site_subtitle || "Descubra propriedades exclusivas nas praias mais deslumbrantes do Brasil. Viva o estilo de vida que você sempre sonhou.";
+
   const nextSlide = useCallback(() => {
-    setSlideIndex((prev) => (prev + 1) % heroSlides.length);
-  }, []);
+    setSlideIndex((prev) => (prev + 1) % currentHeroSlides.length);
+  }, [currentHeroSlides.length]);
 
   useEffect(() => {
     const timer = setInterval(nextSlide, 5000);
@@ -51,15 +72,11 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>Paradise Beach - Imóveis de Luxo à Beira-Mar | Aluguel</title>
-        <meta name="description" content="Encontre imóveis de luxo à beira-mar no Paradise Beach. Villas, casas e apartamentos premium para aluguel nas melhores praias do Brasil." />
-        <meta name="keywords" content="imóveis beira-mar, villas luxo, casas praia, aluguel temporada" />
-        <meta property="og:title" content="Paradise Beach - Imóveis de Luxo à Beira-Mar" />
-        <meta property="og:description" content="Viva o paraíso: imóveis premium à beira-mar para aluguel." />
-        <meta property="og:image" content={heroImg} />
-        <meta property="og:url" content="https://paradisebeach.com" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://paradisebeach.com" />
+        <title>{siteTitle} | Paradise Beach</title>
+        <meta name="description" content={siteSubtitle} />
+        <meta property="og:title" content={`${siteTitle} - Paradise Beach`} />
+        <meta property="og:description" content={siteSubtitle} />
+        <meta property="og:image" content={currentHeroSlides[0]?.src || heroImg} />
       </Helmet>
 
       {/* Hero */}
@@ -67,8 +84,8 @@ export default function Index() {
         <AnimatePresence mode="wait">
           <motion.img
             key={slideIndex}
-            src={heroSlides[slideIndex].src}
-            alt={heroSlides[slideIndex].alt}
+            src={currentHeroSlides[slideIndex]?.src}
+            alt={currentHeroSlides[slideIndex]?.alt}
             initial={{ opacity: 0, scale: 1.08 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -81,7 +98,7 @@ export default function Index() {
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/60 via-foreground/30 to-foreground/75" />
         <div className="absolute inset-0 mesh-overlay opacity-30" />
         <div className="absolute bottom-28 left-1/2 z-20 flex -translate-x-1/2 gap-2.5">
-          {heroSlides.map((_, i) => (
+          {currentHeroSlides.map((_, i) => (
             <button key={i} onClick={() => setSlideIndex(i)} className={`h-2 rounded-full transition-all duration-500 ${i === slideIndex ? "w-8 bg-gold" : "w-2 bg-white/40"}`} aria-label={`Slide ${i + 1}`} />
           ))}
         </div>
@@ -89,10 +106,10 @@ export default function Index() {
           <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
             <span className="mb-3 block text-xs font-semibold uppercase tracking-[0.3em] text-gold sm:text-sm">Imobiliária de Luxo</span>
             <h1 className="mb-5 text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-              Seu Paraíso<br />à Beira-Mar
+              {siteTitle}
             </h1>
             <p className="mx-auto mb-8 max-w-2xl text-base font-light text-primary-foreground/80 sm:text-lg md:text-xl">
-              Descubra propriedades exclusivas nas praias mais deslumbrantes do Brasil. Viva o estilo de vida que você sempre sonhou.
+              {siteSubtitle}
             </p>
             <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
               <Link to="/aluguel" data-magnetic className="button-pop rounded-full bg-gradient-gold px-7 py-3.5 text-base font-semibold text-gold-foreground hover:shadow-gold sm:px-8 sm:text-lg">
@@ -152,8 +169,27 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Dynamic Gallery */}
+      {currentGallery.length > 0 && (
+        <section className="bg-background py-16 sm:py-20 md:py-24">
+          <div className="mobile-shell mx-auto">
+            <div data-reveal>
+              <SectionTitle label="Galeria" title="Vida no Paraíso" subtitle="Um vislumbre das paisagens e momentos que você pode vivenciar." />
+            </div>
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+              {currentGallery.map((imgUrl, idx) => (
+                <div key={idx} data-reveal className="relative group overflow-hidden rounded-xl break-inside-avoid">
+                  <img src={imgUrl} className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Testimonials */}
-      <section className="bg-background py-16 sm:py-20 md:py-24">
+      <section className="bg-sand py-16 sm:py-20 md:py-24">
         <div className="mobile-shell mx-auto">
           <div data-reveal>
             <SectionTitle label="Depoimentos" title="O Que Nossos Clientes Dizem" subtitle="A satisfação dos nossos clientes é o nosso maior patrimônio." />

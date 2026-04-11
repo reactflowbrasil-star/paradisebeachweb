@@ -193,4 +193,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  uploadSitePhoto: async (file: File) => {
+    const formData = new FormData();
+    formData.append("photo", file);
+    const response = await fetch(apiUrl("/api/upload-site.php"), {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Erro ao enviar imagem.");
+    return parseResponse<{ url: string }>(response, "Resposta inválida.");
+  },
 };
