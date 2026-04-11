@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+if (!function_exists("str_ends_with")) {
+    function str_ends_with(string $haystack, string $needle): bool
+    {
+        $length = strlen($needle);
+        if ($length === 0) {
+            return true;
+        }
+        return substr($haystack, -$length) === $needle;
+    }
+}
+
 function apply_cors(): void
 {
     $allowedOrigins = [

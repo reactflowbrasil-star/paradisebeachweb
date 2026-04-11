@@ -7,6 +7,13 @@ require_once __DIR__ . "/common.php";
 $pdo = db();
 $method = $_SERVER["REQUEST_METHOD"] ?? "GET";
 
+// Auto-create table if not exists
+$pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+    id VARCHAR(100) PRIMARY KEY,
+    value TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)");
+
 if ($method === "GET") {
     $rows = $pdo->query("SELECT * FROM settings")->fetchAll();
     $settings = [];
