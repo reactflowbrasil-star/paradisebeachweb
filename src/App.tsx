@@ -13,13 +13,17 @@ import PropertyDetail from "./pages/PropertyDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import AdminPanel from "./pages/AdminPanel";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProperties from "./pages/admin/AdminProperties";
+import AdminPhotos from "./pages/admin/AdminPhotos";
+import AdminReservations from "./pages/admin/AdminReservations";
 import { useWebflowEffects } from "@/hooks/use-webflow-effects";
 import IntroSlides from "@/components/IntroSlides";
 
 const queryClient = new QueryClient();
 
-function AppShell() {
+function PublicShell() {
   useWebflowEffects();
 
   return (
@@ -34,7 +38,6 @@ function AppShell() {
           <Route path="/imovel/:id" element={<PropertyDetail />} />
           <Route path="/sobre" element={<About />} />
           <Route path="/contato" element={<Contact />} />
-          <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -49,8 +52,18 @@ const App = () => (
     <HelmetProvider>
       <TooltipProvider>
         <Sonner />
-        <BrowserRouter>
-          <AppShell />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Routes>
+            {/* Admin routes — own layout, no Navbar/Footer */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="propriedades" element={<AdminProperties />} />
+              <Route path="fotos" element={<AdminPhotos />} />
+              <Route path="reservas" element={<AdminReservations />} />
+            </Route>
+            {/* Public routes */}
+            <Route path="/*" element={<PublicShell />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </HelmetProvider>
