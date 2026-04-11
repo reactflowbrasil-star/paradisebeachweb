@@ -11,6 +11,7 @@ import PropertiesPage from "./pages/PropertiesPage";
 import PropertyDetail from "./pages/PropertyDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import AuthPage from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -41,6 +42,7 @@ function PublicShell() {
           <Route path="/imovel/:id" element={<PropertyDetail />} />
           <Route path="/sobre" element={<About />} />
           <Route path="/contato" element={<Contact />} />
+          <Route path="/login" element={<AuthPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

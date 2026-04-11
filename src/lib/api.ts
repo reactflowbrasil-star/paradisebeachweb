@@ -358,9 +358,14 @@ async function request<T>(input: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   login: (email: string, password: string) =>
-    request<{ token: string; user: { email: string } }>("/api/auth/login.php", {
+    request<{ token: string; user: { id: string; name: string; email: string; role: "admin" | "user" } }>("/api/auth/login.php", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    }),
+  register: (payload: { name: string; email: string; password: string }) =>
+    request<{ user: { id: string; name: string; email: string; role: "admin" | "user" }; message: string }>("/api/auth/register.php", {
+      method: "POST",
+      body: JSON.stringify(payload),
     }),
   getProperties: () => request<DbProperty[]>("/api/properties.php"),
   getProperty: (id: string) => request<DbProperty>(`/api/property.php?id=${encodeURIComponent(id)}`),

@@ -53,6 +53,16 @@ $statements = [
     "CREATE INDEX idx_reservation_guests_reservation_id ON reservation_guests (reservation_id)",
     "CREATE INDEX idx_reservation_payments_reservation_id ON reservation_payments (reservation_id)",
     "ALTER TABLE reservations ADD CONSTRAINT fk_reservations_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL",
+    "CREATE TABLE IF NOT EXISTS users (
+      id CHAR(36) NOT NULL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_users_email (email)
+    )"
 ];
 
 $results = [];

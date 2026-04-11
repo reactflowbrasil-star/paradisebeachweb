@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -62,8 +62,10 @@ function SidebarNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?
   );
 }
 
-function LoginForm() {
-  const { signIn } = useAuth();
+function AuthContainer() {
+  const { signIn, signUp } = useAuth();
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,12 +73,19 @@ function LoginForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const error = await signIn(email, password);
+    let error: Error | null = null;
+    
+    if (mode === "login") {
+      error = await signIn(email, password);
+    } else {
+      error = await signUp(name, email, password);
+    }
+    
     setLoading(false);
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Login realizado com sucesso.");
+      toast.success(mode === "login" ? "Login realizado com sucesso." : "Cadastro realizado com sucesso.");
       window.location.reload();
     }
   };
@@ -97,22 +106,36 @@ function LoginForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "register" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-name" className="text-white/80">Nome Completo</Label>
+                <Input
+                  id="reg-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-primary"
+                  placeholder="Seu nome"
+                />
+              </div>
+            )}
             <div className="space-y-1.5">
-              <Label htmlFor="login-email" className="text-white/80">E-mail</Label>
+              <Label htmlFor="auth-email" className="text-white/80">E-mail</Label>
               <Input
-                id="login-email"
+                id="auth-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-primary"
-                placeholder="admin@paradisebeach.com.br"
+                placeholder="exemplo@email.com"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="login-password" className="text-white/80">Senha</Label>
+              <Label htmlFor="auth-password" className="text-white/80">Senha</Label>
               <Input
-                id="login-password"
+                id="auth-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -122,8 +145,18 @@ function LoginForm() {
             </div>
             <Button type="submit" className="w-full bg-gradient-ocean hover:opacity-90" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Entrar
+              {mode === "login" ? "Entrar" : "Criar Conta"}
             </Button>
+            
+            <div className="text-center pt-2">
+              <button 
+                type="button"
+                onClick={() => setMode(mode === "login" ? "register" : "login")}
+                className="text-sm text-white/40 hover:text-white transition-colors"
+              >
+                {mode === "login" ? "Não tem uma conta? Cadastre-se" : "Já tem uma conta? Entre agora"}
+              </button>
+            </div>
           </form>
         </CardContent>
       </Card>
@@ -155,7 +188,7 @@ export default function AdminLayout() {
   }
 
   if (!user) {
-    return <LoginForm />;
+    return <AuthContainer />;
   }
 
   const handleSignOut = async () => {
