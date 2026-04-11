@@ -57,8 +57,43 @@ export default function Index() {
     ? rawSiteGallery.map(url => getImageUrl(url)) 
     : [];
 
-  const siteTitle = settings?.site_title || "Seu Paraíso à Beira-Mar";
-  const siteSubtitle = settings?.site_subtitle || "Descubra propriedades exclusivas nas praias mais deslumbrantes do Brasil. Viva o estilo de vida que você sempre sonhou.";
+  const siteTitleBase = settings?.site_title || "Seu Paraíso à Beira-Mar";
+  const [displayText, setDisplayText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(150);
+
+  const typewriterPhrases = [
+    siteTitleBase,
+    "Imóveis exclusivos à Beira-Mar",
+    "Sua villa de luxo te espera",
+    "Descubra o litoral Brasileiro",
+    "Onde o luxo encontra a natureza"
+  ];
+
+  useEffect(() => {
+    const handleTyping = () => {
+      const currentPhrase = typewriterPhrases[phraseIndex];
+      
+      if (isDeleting) {
+        setDisplayText(currentPhrase.substring(0, displayText.length - 1));
+        setTypingSpeed(50);
+      } else {
+        setDisplayText(currentPhrase.substring(0, displayText.length + 1));
+        setTypingSpeed(150);
+      }
+
+      if (!isDeleting && displayText === currentPhrase) {
+        setTimeout(() => setIsDeleting(true), 2000);
+      } else if (isDeleting && displayText === "") {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % typewriterPhrases.length);
+      }
+    };
+
+    const timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, phraseIndex, typingSpeed, typewriterPhrases]);
 
   const nextSlide = useCallback(() => {
     setSlideIndex((prev) => (prev + 1) % currentHeroSlides.length);
@@ -72,9 +107,9 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>{siteTitle} | Paradise Beach</title>
+        <title>{siteTitleBase} | Paradise Beach</title>
         <meta name="description" content={siteSubtitle} />
-        <meta property="og:title" content={`${siteTitle} - Paradise Beach`} />
+        <meta property="og:title" content={`${siteTitleBase} - Paradise Beach`} />
         <meta property="og:description" content={siteSubtitle} />
         <meta property="og:image" content={currentHeroSlides[0]?.src || heroImg} />
       </Helmet>
@@ -105,8 +140,8 @@ export default function Index() {
         <div className="mobile-shell relative z-10 mx-auto text-center" data-reveal>
           <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
             <span className="mb-3 block text-xs font-semibold uppercase tracking-[0.3em] text-gold sm:text-sm">Imobiliária de Luxo</span>
-            <h1 className="mb-5 text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-              {siteTitle}
+            <h1 className="mb-5 text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-7xl min-h-[1.2em]">
+              {displayText}<span className="animate-pulse text-gold">|</span>
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-base font-normal text-primary-foreground/90 sm:text-lg md:text-xl">
               {siteSubtitle}
