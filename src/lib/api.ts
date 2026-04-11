@@ -53,8 +53,43 @@ export interface DbReservation {
   updated_at: string;
 }
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
+function apiUrl(path: string) {
+  return `${API_BASE_URL}${path}`;
+}
+
+async function parseResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  const text = await response.text();
+
+  if (!text) {
+    return undefined as T;
+  }
+
+  if (contentType.includes("application/json")) {
+    return JSON.parse(text) as T;
+  }
+
+  if (text.trimStart().startsWith("<")) {
+    throw new Error(
+      "A API retornou HTML em vez de JSON. Verifique se o backend está ativo e se o navegador não está usando um service worker antigo."
+    );
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(fallbackMessage);
+  }
+}
+
 async function request<T>(input: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, {
+  const response = await fetch(apiUrl(input), {
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
@@ -64,15 +99,11 @@ async function request<T>(input: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const fallback = "Erro ao processar a requisição.";
-    const data = await response.json().catch(() => ({ message: fallback }));
+    const data = await parseResponse<{ message?: string }>(response, fallback).catch(() => ({ message: fallback }));
     throw new Error(data.message || fallback);
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
+  return parseResponse<T>(response, "Resposta inválida da API.");
 }
 
 export const api = {
@@ -100,15 +131,20 @@ export const api = {
     const formData = new FormData();
     formData.append("property_id", propertyId);
     files.forEach((file) => formData.append("photos", file));
-    const response = await fetch("/api/photos/upload", {
+
+    const response = await fetch(apiUrl("/api/photos/upload"), {
       method: "POST",
       body: formData,
     });
+
     if (!response.ok) {
-      const data = await response.json().catch(() => ({ message: "Erro ao enviar as fotos." }));
+      const data = await parseResponse<{ message?: string }>(response, "Erro ao enviar as fotos.").catch(() => ({
+        message: "Erro ao enviar as fotos.",
+      }));
       throw new Error(data.message || "Erro ao enviar as fotos.");
     }
-    return response.json() as Promise<DbPhoto[]>;
+
+    return parseResponse<DbPhoto[]>(response, "Resposta inválida ao enviar fotos.");
   },
   updatePhoto: (id: string, payload: Partial<DbPhoto>) =>
     request<DbPhoto>(`/api/photos/${id}`, {
