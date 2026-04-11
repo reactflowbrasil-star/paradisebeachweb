@@ -53,7 +53,15 @@ export interface DbReservation {
   updated_at: string;
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+const runtimeApiBaseUrl = (() => {
+  if (typeof window === "undefined") return "";
+  if (window.location.hostname === "www.paradisebeach.com.br") {
+    return "https://paradisebeach.com.br";
+  }
+  return "";
+})();
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || runtimeApiBaseUrl).replace(/\/$/, "");
 
 function apiUrl(path: string) {
   return `${API_BASE_URL}${path}`;

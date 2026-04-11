@@ -2,6 +2,32 @@
 
 declare(strict_types=1);
 
+function apply_cors(): void
+{
+    $allowedOrigins = [
+        "https://paradisebeach.com.br",
+        "https://www.paradisebeach.com.br",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ];
+
+    $origin = $_SERVER["HTTP_ORIGIN"] ?? "";
+    if (in_array($origin, $allowedOrigins, true)) {
+        header("Access-Control-Allow-Origin: " . $origin);
+        header("Vary: Origin");
+    }
+
+    header("Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type");
+}
+
+apply_cors();
+
+if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "OPTIONS") {
+    http_response_code(204);
+    exit;
+}
+
 header("Content-Type: application/json; charset=utf-8");
 
 function env_or_default(string $key, string $default): string
