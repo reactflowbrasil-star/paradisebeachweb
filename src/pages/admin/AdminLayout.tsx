@@ -23,6 +23,7 @@ import {
   Waves,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useReservationPushNotifications } from "@/hooks/useReservationPushNotifications";
 
 const NAV_ITEMS = [
   { to: "/admin", icon: BarChart3, label: "Dashboard", end: true },
@@ -72,6 +73,7 @@ function LoginForm() {
       toast.error(error.message);
     } else {
       toast.success("Login realizado com sucesso.");
+      window.location.reload();
     }
   };
 
@@ -130,6 +132,15 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  useReservationPushNotifications(Boolean(user));
+
+  useEffect(() => {
+    if (!user) return;
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "default") return;
+
+    void Notification.requestPermission();
+  }, [user]);
 
   if (authLoading) {
     return (
