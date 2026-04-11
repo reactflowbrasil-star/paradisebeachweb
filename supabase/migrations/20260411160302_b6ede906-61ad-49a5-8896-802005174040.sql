@@ -1,0 +1,1 @@
+ALTER TABLE public.properties ADD COLUMN whatsapp text DEFAULT '';
