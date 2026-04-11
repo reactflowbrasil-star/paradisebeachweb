@@ -17,7 +17,7 @@ export default function About() {
   const siteAbout = settings?.site_about || "Fundada em 2010 em Trancoso, Bahia, a Paradise Beach nasceu da paixão por unir pessoas extraordinárias a propriedades excepcionais. Acreditamos que cada cliente merece um lar que reflita seus sonhos — e que esse lar deve estar nos cenários mais deslumbrantes do litoral brasileiro.\n\nNossa equipe de consultores imobiliários é formada por profissionais apaixonados pelo mercado de luxo, com profundo conhecimento das regiões litorâneas mais desejadas do Brasil. Oferecemos um serviço personalizado, discreto e de excelência em cada etapa da jornada.";
 
   return (
-    <div className="pb-16 pt-24 sm:pt-28">
+    <div className="section-padding pt-24 sm:pt-28">
       {/* Hero */}
       <section className="relative py-24 overflow-hidden">
         <img src={sunsetImg} alt="Praia ao pôr do sol" className="absolute inset-0 w-full h-full object-cover" loading="lazy" width={1920} height={800} />

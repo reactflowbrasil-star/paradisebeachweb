@@ -42,21 +42,21 @@ export default function PropertyCard({ property, index = 0 }: Props) {
           </div>
         </div>
 
-        <div className="p-5">
-          <div className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
+        <div className="p-4 sm:p-5">
+          <div className="mb-1.5 flex items-center gap-1 text-[11px] sm:text-xs text-muted-foreground">
             <MapPin size={12} />
-            <span>{property.location}, {property.city} - {property.state}</span>
+            <span className="truncate">{property.location}, {property.city}</span>
           </div>
-          <h3 className="mb-2 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
+          <h3 className="mb-2 text-base sm:text-lg font-semibold text-foreground leading-snug transition-colors group-hover:text-primary line-clamp-1">
             {property.title}
           </h3>
-          <p className="mb-4 text-2xl font-bold text-primary">
+          <p className="mb-4 text-xl sm:text-2xl font-bold text-primary">
             {formatPrice(property.price, property.priceLabel)}
           </p>
-          <div className="flex items-center gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
-            {property.bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} /> {property.bedrooms}</span>}
-            {property.bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} /> {property.bathrooms}</span>}
-            <span className="flex items-center gap-1"><Maximize size={14} /> {property.area}m²</span>
+          <div className="flex items-center gap-4 border-t border-border pt-4 text-[13px] sm:text-sm text-muted-foreground font-medium">
+            {property.bedrooms > 0 && <span className="flex items-center gap-1.5"><Bed size={15} className="text-primary/70" /> {property.bedrooms}</span>}
+            {property.bathrooms > 0 && <span className="flex items-center gap-1.5"><Bath size={15} className="text-primary/70" /> {property.bathrooms}</span>}
+            <span className="flex items-center gap-1.5"><Maximize size={15} className="text-primary/70" /> {property.area}m²</span>
           </div>
         </div>
       </Link>

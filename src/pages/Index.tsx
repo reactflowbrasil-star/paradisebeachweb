@@ -108,14 +108,14 @@ export default function Index() {
             <h1 className="mb-5 text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-7xl">
               {siteTitle}
             </h1>
-            <p className="mx-auto mb-8 max-w-2xl text-base font-light text-primary-foreground/80 sm:text-lg md:text-xl">
+            <p className="mx-auto mb-10 max-w-2xl text-base font-normal text-primary-foreground/90 sm:text-lg md:text-xl">
               {siteSubtitle}
             </p>
-            <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
-              <Link to="/aluguel" data-magnetic className="button-pop rounded-full bg-gradient-gold px-7 py-3.5 text-base font-semibold text-gold-foreground hover:shadow-gold sm:px-8 sm:text-lg">
-                Ver Imóveis para Reserva
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link to="/aluguel" data-magnetic className="button-pop w-full sm:w-auto rounded-full bg-gradient-gold px-8 py-4 text-base font-bold text-gold-foreground hover:shadow-gold sm:text-lg">
+                Reservar Imóvel
               </Link>
-              <Link to="/contato" className="button-pop rounded-full border-2 border-primary-foreground/40 px-7 py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10 sm:px-8 sm:text-lg">
+              <Link to="/contato" className="button-pop w-full sm:w-auto rounded-full border-2 border-primary-foreground/40 px-8 py-4 text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10 sm:text-lg">
                 Fale Conosco
               </Link>
             </div>
@@ -125,7 +125,7 @@ export default function Index() {
       </section>
 
       {/* Benefits */}
-      <section className="bg-background py-16 sm:py-20 md:py-24">
+      <section className="bg-background section-padding">
         <div className="mobile-shell mx-auto">
           <div data-reveal>
             <SectionTitle label="Excelência" title="Por que Paradise Beach?" subtitle="Mais de uma década de expertise em imóveis de alto padrão no litoral brasileiro." />
@@ -145,7 +145,7 @@ export default function Index() {
       </section>
 
       {/* Featured */}
-      <section className="bg-sand py-16 sm:py-20 md:py-24">
+      <section className="bg-sand section-padding">
         <div className="mobile-shell mx-auto">
           <div data-reveal>
             <SectionTitle label="Portfólio" title="Imóveis em Destaque" subtitle="Propriedades excepcionais selecionadas para você." />
@@ -171,7 +171,7 @@ export default function Index() {
 
       {/* Dynamic Gallery */}
       {currentGallery.length > 0 && (
-        <section className="bg-background py-16 sm:py-20 md:py-24">
+        <section className="bg-background section-padding">
           <div className="mobile-shell mx-auto">
             <div data-reveal>
               <SectionTitle label="Galeria" title="Vida no Paraíso" subtitle="Um vislumbre das paisagens e momentos que você pode vivenciar." />
@@ -189,7 +189,7 @@ export default function Index() {
       )}
 
       {/* Testimonials */}
-      <section className="bg-sand py-16 sm:py-20 md:py-24">
+      <section className="bg-sand section-padding">
         <div className="mobile-shell mx-auto">
           <div data-reveal>
             <SectionTitle label="Depoimentos" title="O Que Nossos Clientes Dizem" subtitle="A satisfação dos nossos clientes é o nosso maior patrimônio." />
@@ -214,7 +214,7 @@ export default function Index() {
       </section>
 
       {/* Newsletter */}
-      <section className="relative overflow-hidden py-16 sm:py-20 md:py-24">
+      <section className="relative overflow-hidden section-padding">
         <img src={sunsetImg} alt="Pôr do sol na praia" className="absolute inset-0 h-full w-full object-cover" loading="lazy" width={1920} height={800} data-parallax />
         <div className="absolute inset-0 bg-foreground/70" />
         <div className="mobile-shell relative z-10 mx-auto text-center" data-reveal>
@@ -227,7 +227,7 @@ export default function Index() {
       </section>
 
       {/* CTA */}
-      <section className="bg-background py-16 sm:py-20 md:py-24">
+      <section className="bg-background section-padding">
         <div className="mobile-shell mx-auto text-center" data-reveal>
           <h2 className="mb-6 text-3xl font-bold text-foreground sm:text-4xl md:text-5xl">
             Pronto para Encontrar<br />seu Paraíso?

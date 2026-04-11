@@ -33,7 +33,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="pb-16 pt-24 sm:pt-28">
+    <div className="section-padding pt-24 sm:pt-28">
       <div className="mobile-shell mx-auto">
         <SectionTitle label="Contato" title="Fale Conosco" subtitle="Estamos prontos para ajudá-lo a encontrar o imóvel dos seus sonhos." />
 
