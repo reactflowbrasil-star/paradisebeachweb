@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, MapPin, TrendingUp, Gem, Star, ArrowRight } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import heroImg from "@/assets/hero-beach.jpg";
 import sunsetImg from "@/assets/beach-sunset.jpg";
@@ -58,22 +58,26 @@ export default function Index() {
     : [];
 
   const siteTitleBase = settings?.site_title || "Seu Paraíso à Beira-Mar";
+  const siteSubtitle =
+    settings?.site_subtitle ||
+    "Imóveis exclusivos de alto padrão para viver e investir no litoral brasileiro.";
   const [displayText, setDisplayText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(150);
 
-  const typewriterPhrases = [
+  const typewriterPhrases = useMemo(() => [
     siteTitleBase,
     "Imóveis exclusivos à Beira-Mar",
     "Sua villa de luxo te espera",
     "Descubra o litoral Brasileiro",
     "Onde o luxo encontra a natureza"
-  ];
+  ], [siteTitleBase]);
 
   useEffect(() => {
     const handleTyping = () => {
       const currentPhrase = typewriterPhrases[phraseIndex];
+      if (!currentPhrase) return;
       
       if (isDeleting) {
         setDisplayText(currentPhrase.substring(0, displayText.length - 1));
