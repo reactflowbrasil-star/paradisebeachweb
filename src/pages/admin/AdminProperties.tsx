@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { api, type DbPhoto, type DbProperty } from "@/lib/api";
+import { api, type DbPhoto, type DbProperty, getImageUrl } from "@/lib/api";
 import {
   Bath,
   Bed,
@@ -397,7 +397,7 @@ export default function AdminProperties() {
               <div className="flex flex-col md:flex-row">
                 <div className="relative h-48 w-full shrink-0 bg-slate-100 md:h-auto md:w-56">
                   {coverPhoto ? (
-                    <img src={coverPhoto.url} alt={property.title} className="h-full w-full object-cover" />
+                    <img src={getImageUrl(coverPhoto.url)} alt={property.title} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                       <Camera className="h-8 w-8" />
@@ -460,7 +460,7 @@ export default function AdminProperties() {
                       {propertyPhotos.slice(0, 6).map((photo) => (
                         <img
                           key={photo.id}
-                          src={photo.url}
+                          src={getImageUrl(photo.url)}
                           alt=""
                           className="h-12 w-14 shrink-0 rounded object-cover opacity-80"
                         />
@@ -784,7 +784,7 @@ export default function AdminProperties() {
                       >
                         <div className="relative aspect-[4/3] bg-slate-100">
                           <img
-                            src={photo.url}
+                            src={getImageUrl(photo.url)}
                             alt={photo.caption || "Foto do imóvel"}
                             className="h-full w-full object-cover"
                           />

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
-import { api, type DbPhoto, type DbProperty, type DbReservation } from "@/lib/api";
+import { api, type DbPhoto, type DbProperty, type DbReservation, getImageUrl } from "@/lib/api";
 import { CalendarDays, Camera, Home, Loader2, LogOut, Plus, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -410,7 +410,7 @@ function AdminPanel() {
                           <div className="flex flex-wrap gap-2 pt-2">
                             {propPhotos.map((photo) => (
                               <div key={photo.id} className="group relative">
-                                <img src={photo.url} alt={photo.caption} className="h-16 w-20 rounded-md object-cover" />
+                                <img src={getImageUrl(photo.url)} alt={photo.caption} className="h-16 w-20 rounded-md object-cover" />
                                 {photo.cover && <span className="absolute left-0 top-0 rounded-br bg-primary px-1 text-[10px] text-primary-foreground">Capa</span>}
                                 <div className="absolute inset-0 flex items-center justify-center gap-1 rounded-md bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                                   <button onClick={() => makePhotoCover(photo)} className="rounded bg-primary/80 px-1 text-[10px] text-white">Capa</button>
@@ -434,7 +434,7 @@ function AdminPanel() {
                   {photos.length === 0 && <p className="py-8 text-center text-muted-foreground">Nenhuma foto. Faça upload pela aba Propriedades.</p>}
                   {photos.map((photo) => (
                     <div key={photo.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center">
-                      <img src={photo.url} alt={photo.caption} className="h-20 w-28 shrink-0 rounded-md object-cover" />
+                      <img src={getImageUrl(photo.url)} alt={photo.caption} className="h-20 w-28 shrink-0 rounded-md object-cover" />
                       <div className="flex-1">
                         <p className="font-medium">{photo.caption}</p>
                         <p className="text-sm text-muted-foreground">{propertyNameById[photo.property_id] ?? "Imóvel removido"}</p>
