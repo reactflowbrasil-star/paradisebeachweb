@@ -24,6 +24,8 @@ export interface DbProperty {
   lat: number | null;
   lng: number | null;
   whatsapp: string | null;
+  address: string | null;
+  cep: string | null;
   created_at: string;
   updated_at: string;
 }

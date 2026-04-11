@@ -34,6 +34,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import MapboxPicker from "@/components/admin/MapboxPicker";
 
 const formatPrice = (price: number, label?: string | null) =>
   `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
@@ -58,8 +59,10 @@ const emptyPropertyForm = {
   bathrooms: "0",
   area: "0",
   whatsapp: "",
-  lat: "",
-  lng: "",
+  address: "",
+  cep: "",
+  lat: "" as string | number,
+  lng: "" as string | number,
   amenities: "",
   ocean_view: false,
   featured: false,
@@ -156,8 +159,10 @@ export default function AdminProperties() {
       bathrooms: String(property.bathrooms),
       area: String(property.area),
       whatsapp: property.whatsapp ?? "",
-      lat: property.lat != null ? String(property.lat) : "",
-      lng: property.lng != null ? String(property.lng) : "",
+      address: (property as any).address ?? "",
+      cep: (property as any).cep ?? "",
+      lat: property.lat ?? "",
+      lng: property.lng ?? "",
       amenities: Array.isArray(property.amenities) ? property.amenities.join(", ") : "",
       ocean_view: Boolean(property.ocean_view),
       featured: Boolean(property.featured),
@@ -165,6 +170,42 @@ export default function AdminProperties() {
     setCoverFile(null);
     setGalleryFiles([]);
     setDialogOpen(true);
+  };
+
+  const handleCepLookup = async (cep: string) => {
+    const cleaned = cep.replace(/\D/g, "");
+    setForm((f) => ({ ...f, cep: cleaned }));
+    
+    if (cleaned.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setForm((f) => ({
+            ...f,
+            city: data.localidade,
+            state: data.uf,
+            location: data.bairro,
+            address: data.logradouro,
+          }));
+          toast.success("Endereço preenchido via CEP!");
+          
+          // Try to geocode the address with Mapbox for an initial marker jump
+          const token = import.meta.env.VITE_MAPBOX_TOKEN;
+          if (token) {
+            const query = encodeURIComponent(`${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}, Brasil`);
+            const geoRes = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${token}&limit=1`);
+            const geoData = await geoRes.json();
+            if (geoData.features?.[0]) {
+              const [lng, lat] = geoData.features[0].center;
+              setForm(f => ({ ...f, lat, lng }));
+            }
+          }
+        }
+      } catch (err) {
+        console.error("CEP error:", err);
+      }
+    }
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -186,6 +227,8 @@ export default function AdminProperties() {
         bathrooms: Number(form.bathrooms),
         area: Number(form.area),
         whatsapp: form.whatsapp || null,
+        address: (form as any).address || null,
+        cep: (form as any).cep || null,
         lat: form.lat ? Number(form.lat) : null,
         lng: form.lng ? Number(form.lng) : null,
         amenities: form.amenities
@@ -536,7 +579,7 @@ export default function AdminProperties() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="prop-price">Preco</Label>
+                <Label htmlFor="prop-price">Preço</Label>
                 <Input
                   id="prop-price"
                   type="number"
@@ -548,12 +591,32 @@ export default function AdminProperties() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="prop-price-label">Rotulo do preco</Label>
+                <Label htmlFor="prop-price-label">Rótulo do preço</Label>
                 <Input
                   id="prop-price-label"
-                  placeholder="/diaria, /mes"
+                  placeholder="/diária, /mês"
                   value={form.price_label}
                   onChange={(event) => setForm((current) => ({ ...current, price_label: event.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-1">
+                <Label htmlFor="prop-cep">CEP</Label>
+                <Input
+                  id="prop-cep"
+                  placeholder="00000-000"
+                  value={form.cep}
+                  onChange={(e) => handleCepLookup(e.target.value)}
+                  maxLength={9}
+                />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-1">
+                <Label htmlFor="prop-address">Endereço / Rua</Label>
+                <Input
+                  id="prop-address"
+                  value={form.address}
+                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
                 />
               </div>
 
@@ -581,13 +644,31 @@ export default function AdminProperties() {
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
-                <Label htmlFor="prop-location">Regiao / Bairro</Label>
+                <Label htmlFor="prop-location">Bairro / Região</Label>
                 <Input
                   id="prop-location"
                   value={form.location}
                   onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))}
                   required
                 />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="flex items-center justify-between">
+                  Localização no Mapa
+                  <Badge variant="outline" className="text-[10px] font-normal">
+                    {form.lat && form.lng ? `${Number(form.lat).toFixed(6)}, ${Number(form.lng).toFixed(6)}` : "Não definida"}
+                  </Badge>
+                </Label>
+                <MapboxPicker 
+                  lat={form.lat ? Number(form.lat) : null}
+                  lng={form.lng ? Number(form.lng) : null}
+                  onChange={(lat, lng) => setForm(f => ({ ...f, lat, lng }))}
+                  token={import.meta.env.VITE_MAPBOX_TOKEN || ""}
+                />
+                {!import.meta.env.VITE_MAPBOX_TOKEN && (
+                  <p className="text-[10px] text-destructive">Aviso: VITE_MAPBOX_TOKEN não configurado no .env</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -613,7 +694,7 @@ export default function AdminProperties() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="prop-area">Area (m2)</Label>
+                <Label htmlFor="prop-area">Área (m2)</Label>
                 <Input
                   id="prop-area"
                   type="number"

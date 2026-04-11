@@ -18,10 +18,10 @@ if ($method === "POST") {
     $stmt = $pdo->prepare(
         "INSERT INTO properties (
             id, title, type, listing, price, price_label, location, city, state, description,
-            bedrooms, bathrooms, area, ocean_view, featured, status, amenities, lat, lng, whatsapp
+            bedrooms, bathrooms, area, ocean_view, featured, status, amenities, lat, lng, whatsapp, address, cep
         ) VALUES (
             :id, :title, :type, :listing, :price, :price_label, :location, :city, :state, :description,
-            :bedrooms, :bathrooms, :area, :ocean_view, :featured, :status, :amenities, :lat, :lng, :whatsapp
+            :bedrooms, :bathrooms, :area, :ocean_view, :featured, :status, :amenities, :lat, :lng, :whatsapp, :address, :cep
         )"
     );
     $stmt->execute([
@@ -45,6 +45,8 @@ if ($method === "POST") {
         ":lat" => $payload["lat"] ?? null,
         ":lng" => $payload["lng"] ?? null,
         ":whatsapp" => $payload["whatsapp"] ?? null,
+        ":address" => $payload["address"] ?? null,
+        ":cep" => $payload["cep"] ?? null,
     ]);
 
     $fetch = $pdo->prepare("SELECT * FROM properties WHERE id = :id");

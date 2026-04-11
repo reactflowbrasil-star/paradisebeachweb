@@ -40,6 +40,8 @@ function mapProperty(row) {
     ocean_view: Boolean(row.ocean_view),
     featured: Boolean(row.featured),
     amenities: Array.isArray(row.amenities) ? row.amenities : JSON.parse(row.amenities || "[]"),
+    address: row.address || null,
+    cep: row.cep || null,
   };
 }
 
@@ -94,10 +96,9 @@ async function createProperty(req, res) {
   const payload = req.body || {};
   const id = randomUUID();
   await query(
-    `INSERT INTO properties (
       id, title, type, listing, price, price_label, location, city, state, description,
-      bedrooms, bathrooms, area, ocean_view, featured, status, amenities, lat, lng, whatsapp
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      bedrooms, bathrooms, area, ocean_view, featured, status, amenities, lat, lng, whatsapp, address, cep
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       payload.title,
@@ -119,6 +120,8 @@ async function createProperty(req, res) {
       payload.lat ?? null,
       payload.lng ?? null,
       payload.whatsapp || null,
+      payload.address || null,
+      payload.cep || null,
     ]
   );
 
