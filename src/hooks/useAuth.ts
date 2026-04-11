@@ -1,60 +1,55 @@
 import { useEffect, useState } from "react";
-import { SUPABASE_CONFIG_ERROR, SUPABASE_CONFIGURED, supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import { api } from "@/lib/api";
+
+const STORAGE_KEY = "paradise-admin-session";
+
+interface AuthUser {
+  email: string;
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!SUPABASE_CONFIGURED) {
-      setLoading(false);
-      return;
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as AuthUser;
+        setUser(parsed);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
       }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    if (!SUPABASE_CONFIGURED) {
-      return new Error(SUPABASE_CONFIG_ERROR ?? "Supabase não configurado.");
+    try {
+      const result = await api.login(email, password);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(result.user));
+      setUser(result.user);
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error : new Error("Falha ao entrar.");
     }
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error?.message.toLowerCase().includes("email not confirmed")) {
-      return new Error("Seu e-mail ainda não foi confirmado. Abra sua caixa de entrada e confirme o acesso antes de entrar.");
-    }
-    return error;
   };
 
-  const signUp = async (email: string, password: string) => {
-    if (!SUPABASE_CONFIGURED) {
-      return new Error(SUPABASE_CONFIG_ERROR ?? "Supabase não configurado.");
-    }
-
-    const { error } = await supabase.auth.signUp({ email, password });
-    return error;
-  };
+  const signUp = async () => new Error("O cadastro está desativado nesta versão.");
 
   const signOut = async () => {
-    if (!SUPABASE_CONFIGURED) return;
-    await supabase.auth.signOut();
+    localStorage.removeItem(STORAGE_KEY);
+    setUser(null);
   };
 
-  return { user, session, loading, signIn, signUp, signOut, configured: SUPABASE_CONFIGURED, configError: SUPABASE_CONFIG_ERROR };
+  return {
+    user,
+    session: user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    configured: true,
+    configError: null,
+  };
 }

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase, SUPABASE_CONFIGURED } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { api, type DbPhoto, type DbProperty } from "@/lib/api";
 
-export type DbProperty = Tables<"properties">;
-export type DbPhoto = Tables<"property_photos">;
+export type { DbPhoto, DbProperty } from "@/lib/api";
 
 export interface Property {
   id: string;
@@ -38,9 +36,10 @@ function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
       return a.sort_order - b.sort_order;
     });
 
-  const images = propertyPhotos.length > 0
-    ? propertyPhotos.map((ph) => ph.url)
-    : ["/placeholder.svg"];
+  const images =
+    propertyPhotos.length > 0
+      ? propertyPhotos.map((ph) => ph.url)
+      : ["/placeholder.svg"];
 
   return {
     id: p.id,
@@ -72,24 +71,16 @@ export function useProperties() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!SUPABASE_CONFIGURED) {
-      setLoading(false);
-      return;
-    }
-
-    async function fetch() {
-      const [{ data: props }, { data: photos }] = await Promise.all([
-        supabase.from("properties").select("*").order("created_at", { ascending: false }),
-        supabase.from("property_photos").select("*"),
-      ]);
-
-      if (props) {
-        setProperties(props.map((p) => mapDbToProperty(p, photos ?? [])));
+    async function fetchData() {
+      try {
+        const [props, photos] = await Promise.all([api.getProperties(), api.getPhotos()]);
+        setProperties(props.map((property) => mapDbToProperty(property, photos)));
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
-    fetch();
+    fetchData();
   }, []);
 
   return { properties, loading };
@@ -100,24 +91,23 @@ export function useProperty(id: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!SUPABASE_CONFIGURED || !id) {
+    if (!id) {
       setLoading(false);
       return;
     }
 
-    async function fetch() {
-      const [{ data: prop }, { data: photos }] = await Promise.all([
-        supabase.from("properties").select("*").eq("id", id!).single(),
-        supabase.from("property_photos").select("*").eq("property_id", id!),
-      ]);
-
-      if (prop) {
-        setProperty(mapDbToProperty(prop, photos ?? []));
+    async function fetchData() {
+      try {
+        const [prop, photos] = await Promise.all([api.getProperty(id), api.getPhotos()]);
+        setProperty(mapDbToProperty(prop, photos));
+      } catch {
+        setProperty(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
-    fetch();
+    fetchData();
   }, [id]);
 
   return { property, loading };
