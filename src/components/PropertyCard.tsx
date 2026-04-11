@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react";
+import { Bed, Bath, Maximize, MapPin } from "lucide-react";
 import { type Property, formatPrice } from "@/hooks/useProperties";
 import { motion } from "framer-motion";
 import LazyImage from "./LazyImage";
@@ -32,7 +32,7 @@ export default function PropertyCard({ property, index = 0 }: Props) {
           />
           <div className="absolute left-4 top-4 flex gap-2">
             <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground">
-              {property.listing === "venda" ? "Venda" : "Aluguel"}
+              Aluguel
             </span>
             {property.featured && (
               <span className="rounded-full bg-gradient-gold px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-foreground">
@@ -40,13 +40,6 @@ export default function PropertyCard({ property, index = 0 }: Props) {
               </span>
             )}
           </div>
-          <button
-            className="button-pop absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm transition-colors hover:bg-card"
-            aria-label="Favoritar"
-            onClick={(e) => e.preventDefault()}
-          >
-            <Heart size={16} className="text-foreground" />
-          </button>
         </div>
 
         <div className="p-5">
@@ -63,11 +56,10 @@ export default function PropertyCard({ property, index = 0 }: Props) {
           <div className="flex items-center gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
             {property.bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} /> {property.bedrooms}</span>}
             {property.bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} /> {property.bathrooms}</span>}
-            <span className="flex items-center gap-1"><Maximize size={14} /> {property.area}m2</span>
+            <span className="flex items-center gap-1"><Maximize size={14} /> {property.area}m²</span>
           </div>
         </div>
       </Link>
     </motion.div>
   );
 }
-

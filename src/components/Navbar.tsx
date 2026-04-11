@@ -6,8 +6,7 @@ import logoImg from "@/assets/logo-paradise.png";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/venda", label: "À Venda" },
-  { to: "/aluguel", label: "Aluguel" },
+  { to: "/aluguel", label: "Imóveis" },
   { to: "/sobre", label: "Sobre Nós" },
   { to: "/contato", label: "Contato" },
   { to: "/admin", label: "Admin" },

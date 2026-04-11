@@ -26,6 +26,7 @@ export interface Property {
   amenities: string[];
   lat: number;
   lng: number;
+  whatsapp: string;
 }
 
 function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
@@ -62,6 +63,7 @@ function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
     amenities: p.amenities ?? [],
     lat: Number(p.lat ?? 0),
     lng: Number(p.lng ?? 0),
+    whatsapp: p.whatsapp ?? "",
   };
 }
 

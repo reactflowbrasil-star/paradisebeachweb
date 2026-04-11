@@ -59,11 +59,8 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
         <CardContent>
           {!configured ? (
             <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-              <p className="font-medium">Supabase não configurado</p>
+              <p className="font-medium">Backend não configurado</p>
               <p>{configError}</p>
-              <p className="mt-2 text-muted-foreground">
-                Use `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` no `.env`. Se seu projeto ainda usa a chave antiga, `VITE_SUPABASE_ANON_KEY` também é aceita.
-              </p>
             </div>
           ) : null}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,9 +96,9 @@ function AdminPanel() {
   const [reservationFilter, setReservationFilter] = useState<string>("todas");
 
   const [propertyForm, setPropertyForm] = useState({
-    title: "", type: "casa" as DbProperty["type"], listing: "venda" as DbProperty["listing"],
+    title: "", type: "casa" as DbProperty["type"],
     price: "", city: "", state: "", location: "", description: "",
-    bedrooms: "0", bathrooms: "0", area: "0",
+    bedrooms: "0", bathrooms: "0", area: "0", whatsapp: "",
   });
   const [reservationForm, setReservationForm] = useState({
     propertyId: "", guestName: "", email: "",
@@ -171,7 +168,7 @@ function AdminPanel() {
     const payload: TablesInsert<"properties"> = {
       title: propertyForm.title,
       type: propertyForm.type,
-      listing: propertyForm.listing,
+      listing: "aluguel",
       price: Number(propertyForm.price),
       city: propertyForm.city,
       state: propertyForm.state,
@@ -180,11 +177,12 @@ function AdminPanel() {
       bedrooms: Number(propertyForm.bedrooms),
       bathrooms: Number(propertyForm.bathrooms),
       area: Number(propertyForm.area),
+      whatsapp: propertyForm.whatsapp,
     };
     const { error } = await supabase.from("properties").insert(payload);
     if (error) { toast.error(error.message); return; }
     toast.success("Imóvel cadastrado!");
-    setPropertyForm({ title: "", type: "casa", listing: "venda", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0" });
+    setPropertyForm({ title: "", type: "casa", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0", whatsapp: "" });
     fetchAll();
   };
 
@@ -205,7 +203,12 @@ function AdminPanel() {
     fetchAll();
   };
 
-  // Photo upload
+  const updateWhatsapp = async (id: string, whatsapp: string) => {
+    await supabase.from("properties").update({ whatsapp }).eq("id", id);
+    fetchAll();
+  };
+
+  // Photo upload (multiple)
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, propertyId: string) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -244,14 +247,12 @@ function AdminPanel() {
   };
 
   const makePhotoCover = async (photo: DbPhoto) => {
-    // Remove cover from siblings
     await supabase.from("property_photos").update({ cover: false }).eq("property_id", photo.property_id);
     await supabase.from("property_photos").update({ cover: true }).eq("id", photo.id);
     fetchAll();
   };
 
   const deletePhoto = async (photo: DbPhoto) => {
-    // Extract path from URL
     const urlParts = photo.url.split("/property-photos/");
     if (urlParts[1]) {
       await supabase.storage.from("property-photos").remove([urlParts[1]]);
@@ -280,8 +281,8 @@ function AdminPanel() {
   };
 
   const cycleReservationStatus = async (r: DbReservation) => {
-    const next: Record<string, string> = { pendente: "confirmada", confirmada: "cancelada", cancelada: "pendente" };
-    await supabase.from("reservations").update({ status: next[r.status] as DbReservation["status"] }).eq("id", r.id);
+    const next: Record<string, DbReservation["status"]> = { pendente: "confirmada", confirmada: "cancelada", cancelada: "pendente" };
+    await supabase.from("reservations").update({ status: next[r.status] }).eq("id", r.id);
     fetchAll();
   };
 
@@ -303,7 +304,7 @@ function AdminPanel() {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3">
           <Badge className="w-fit bg-primary/10 text-primary">Painel Administrativo</Badge>
-          <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Gestão completa de operação imobiliária</h1>
+          <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Gestão de Propriedades & Reservas</h1>
           <p className="max-w-3xl text-muted-foreground">
             Logado como <strong>{user.email}</strong>
           </p>
@@ -359,7 +360,7 @@ function AdminPanel() {
               <Card>
                 <CardHeader>
                   <CardTitle>Novo imóvel</CardTitle>
-                  <CardDescription>Cadastro rápido para alimentar o catálogo comercial.</CardDescription>
+                  <CardDescription>Cadastro rápido. Após criar, faça upload das fotos.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={addProperty} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -368,7 +369,7 @@ function AdminPanel() {
                       <Input id="title" value={propertyForm.title} onChange={(e) => setPropertyForm(prev => ({ ...prev, title: e.target.value }))} required />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="price">Preço</Label>
+                      <Label htmlFor="price">Preço / diária</Label>
                       <Input id="price" type="number" min={0} value={propertyForm.price} onChange={(e) => setPropertyForm(prev => ({ ...prev, price: e.target.value }))} required />
                     </div>
                     <div className="space-y-1.5">
@@ -393,13 +394,6 @@ function AdminPanel() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="listing">Operação</Label>
-                      <select id="listing" value={propertyForm.listing} onChange={(e) => setPropertyForm(prev => ({ ...prev, listing: e.target.value as DbProperty["listing"] }))} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
-                        <option value="venda">Venda</option>
-                        <option value="aluguel">Aluguel</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
                       <Label htmlFor="bedrooms">Quartos</Label>
                       <Input id="bedrooms" type="number" min={0} value={propertyForm.bedrooms} onChange={(e) => setPropertyForm(prev => ({ ...prev, bedrooms: e.target.value }))} />
                     </div>
@@ -410,6 +404,10 @@ function AdminPanel() {
                     <div className="space-y-1.5">
                       <Label htmlFor="area">Área (m²)</Label>
                       <Input id="area" type="number" min={0} value={propertyForm.area} onChange={(e) => setPropertyForm(prev => ({ ...prev, area: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <Input id="whatsapp" placeholder="5573999990000" value={propertyForm.whatsapp} onChange={(e) => setPropertyForm(prev => ({ ...prev, whatsapp: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5 md:col-span-2 xl:col-span-3">
                       <Label htmlFor="description">Descrição</Label>
@@ -432,41 +430,74 @@ function AdminPanel() {
                   {filteredProperties.length === 0 && (
                     <p className="py-8 text-center text-muted-foreground">Nenhum imóvel cadastrado.</p>
                   )}
-                  {filteredProperties.map((property) => (
-                    <div key={property.id} className="space-y-3 rounded-lg border p-4">
-                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <p className="font-semibold">{property.title}</p>
-                          <p className="text-sm text-muted-foreground">{property.city}/{property.state} • {property.listing} • {formatPrice(property.price, property.price_label)}</p>
+                  {filteredProperties.map((property) => {
+                    const propPhotos = photos.filter(ph => ph.property_id === property.id);
+                    return (
+                      <div key={property.id} className="space-y-3 rounded-lg border p-4">
+                        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="font-semibold">{property.title}</p>
+                            <p className="text-sm text-muted-foreground">{property.city}/{property.state} • {formatPrice(property.price, property.price_label)}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button variant={property.featured ? "secondary" : "outline"} size="sm" onClick={() => toggleFeatured(property)}>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              {property.featured ? "Destaque" : "Destacar"}
+                            </Button>
+                            <Button variant="destructive" size="sm" className="gap-2" onClick={() => removeProperty(property.id)}>
+                              <Trash2 className="h-4 w-4" />Excluir
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button variant={property.featured ? "secondary" : "outline"} size="sm" onClick={() => toggleFeatured(property)}>
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            {property.featured ? "Destaque" : "Destacar"}
-                          </Button>
-                          <Button variant="destructive" size="sm" className="gap-2" onClick={() => removeProperty(property.id)}>
-                            <Trash2 className="h-4 w-4" />Excluir
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <Label>Status:</Label>
-                        <select className="h-8 rounded-md border border-input bg-background px-2" value={property.status} onChange={(e) => changeStatus(property.id, e.target.value as DbProperty["status"])}>
-                          <option value="disponivel">Disponível</option>
-                          <option value="vendido">Vendido</option>
-                          <option value="alugado">Alugado</option>
-                        </select>
-                        <Badge className="bg-muted text-foreground">{property.type}</Badge>
 
-                        {/* Inline photo upload */}
-                        <label className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border border-input px-3 py-1.5 text-sm transition hover:bg-accent">
-                          <Upload className="h-4 w-4" />
-                          <span>{uploadingPhoto ? "Enviando..." : "Upload fotos"}</span>
-                          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handlePhotoUpload(e, property.id)} disabled={uploadingPhoto} />
-                        </label>
+                        {/* WhatsApp inline */}
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm shrink-0">WhatsApp:</Label>
+                          <Input
+                            className="h-8 max-w-[200px]"
+                            placeholder="5573999990000"
+                            defaultValue={property.whatsapp ?? ""}
+                            onBlur={(e) => {
+                              if (e.target.value !== (property.whatsapp ?? "")) {
+                                updateWhatsapp(property.id, e.target.value);
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <Label>Status:</Label>
+                          <select className="h-8 rounded-md border border-input bg-background px-2" value={property.status} onChange={(e) => changeStatus(property.id, e.target.value as DbProperty["status"])}>
+                            <option value="disponivel">Disponível</option>
+                            <option value="alugado">Alugado</option>
+                          </select>
+                          <Badge className="bg-muted text-foreground">{property.type}</Badge>
+
+                          <label className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border border-input px-3 py-1.5 text-sm transition hover:bg-accent">
+                            <Upload className="h-4 w-4" />
+                            <span>{uploadingPhoto ? "Enviando..." : "Upload fotos"}</span>
+                            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handlePhotoUpload(e, property.id)} disabled={uploadingPhoto} />
+                          </label>
+                        </div>
+
+                        {/* Inline photo gallery */}
+                        {propPhotos.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {propPhotos.map((photo) => (
+                              <div key={photo.id} className="relative group">
+                                <img src={photo.url} alt={photo.caption} className="h-16 w-20 rounded-md object-cover" />
+                                {photo.cover && <span className="absolute top-0 left-0 bg-primary text-primary-foreground text-[10px] px-1 rounded-br">Capa</span>}
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-1">
+                                  <button onClick={() => makePhotoCover(photo)} className="text-white text-[10px] bg-primary/80 px-1 rounded">Capa</button>
+                                  <button onClick={() => deletePhoto(photo)} className="text-white text-[10px] bg-destructive/80 px-1 rounded">×</button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             </TabsContent>
