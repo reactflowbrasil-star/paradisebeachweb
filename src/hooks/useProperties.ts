@@ -27,6 +27,12 @@ export interface Property {
   whatsapp: string;
 }
 
+function parseSafeCoord(value: number | string | null | undefined): number {
+  if (value == null || value === "") return NaN;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : NaN;
+}
+
 function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
   const propertyPhotos = photos
     .filter((ph) => ph.property_id === p.id && ph.published)
@@ -60,8 +66,8 @@ function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
     status: p.status,
     images,
     amenities: p.amenities ?? [],
-    lat: Number(p.lat ?? 0),
-    lng: Number(p.lng ?? 0),
+    lat: parseSafeCoord(p.lat),
+    lng: parseSafeCoord(p.lng),
     whatsapp: p.whatsapp ?? "",
   };
 }

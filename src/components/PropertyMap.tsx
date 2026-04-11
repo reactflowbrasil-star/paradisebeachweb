@@ -65,6 +65,11 @@ export default function PropertyMap({ property }: PropertyMapProps) {
   const token = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
 
+  const hasValidCoords =
+    Number.isFinite(property.lat) &&
+    Number.isFinite(property.lng) &&
+    !(property.lat === 0 && property.lng === 0);
+
   const tileUrl = token
     ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${token}`
     : "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -72,6 +77,20 @@ export default function PropertyMap({ property }: PropertyMapProps) {
   const attribution = token
     ? '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+  if (!hasValidCoords) {
+    return (
+      <div className="rounded-lg overflow-hidden bg-muted">
+        <div className="flex items-center gap-2 text-sm text-foreground/80 border-b border-border bg-card px-4 py-3">
+          <MapPin size={16} />
+          <span>{property.location}, {property.city} — {property.state}</span>
+        </div>
+        <div className="h-[28rem] flex items-center justify-center text-muted-foreground text-sm">
+          Localização indisponível no mapa para este imóvel.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg overflow-hidden bg-muted">
