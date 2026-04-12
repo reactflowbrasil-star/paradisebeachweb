@@ -25,39 +25,47 @@ import { Button } from "@/components/ui/button";
 type Tab = "reservas" | "dados" | "seguranca";
 
 export default function Profile() {
-  const { user, signOut } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("reservas");
   const [reservations, setReservations] = useState<DbReservation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       navigate("/login");
       return;
     }
 
-    const fetchReservations = async () => {
-      try {
-        // Search by email first since we might not have a client_id link yet
-        const data = await api.getReservations();
-        const userReservations = data.filter(r => r.email === user.email);
-        setReservations(userReservations);
-      } catch (error) {
-        console.error("Erro ao buscar reservas:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReservations();
-  }, [user, navigate]);
+    if (user) {
+      const fetchReservations = async () => {
+        try {
+          const data = await api.getReservations();
+          const userReservations = data.filter(r => r.email === user.email);
+          setReservations(userReservations);
+        } catch (error) {
+          console.error("Erro ao buscar reservas:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchReservations();
+    }
+  }, [user, navigate, isLoading]);
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
     toast.success("Sessão encerrada com sucesso.");
     navigate("/");
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-sand/20">
+        <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
