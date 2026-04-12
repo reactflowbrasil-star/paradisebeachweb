@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { CalendarDays, Camera, Home, Loader2, LogOut, Plus, Sparkles, Trash2, Upload, Users } from "lucide-react";
+import { CalendarDays, Camera, Check, ChevronsUpDown, Home, Loader2, LogOut, Plus, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 type DbProperty = Tables<"properties">;
