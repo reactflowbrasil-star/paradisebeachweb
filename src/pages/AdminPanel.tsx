@@ -585,10 +585,8 @@ function AdminPanel() {
                 <CardContent>
                   <form onSubmit={addReservation} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="res-property">Imóvel</Label>
-                      <select id="res-property" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={reservationForm.propertyId} onChange={(e) => setReservationForm(prev => ({ ...prev, propertyId: e.target.value }))} required>
-                        {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-                      </select>
+                      <Label>Imóvel</Label>
+                      <PropertyCombobox properties={properties} value={reservationForm.propertyId} onChange={(id) => setReservationForm(prev => ({ ...prev, propertyId: id }))} />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="guestName">Hóspede</Label>
