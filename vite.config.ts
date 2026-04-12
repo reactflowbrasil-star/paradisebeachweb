@@ -11,10 +11,6 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
-    proxy: {
-      "/api": "http://127.0.0.1:3001",
-      "/uploads": "http://127.0.0.1:3001",
-    },
   },
   plugins: [
     react(),
@@ -78,13 +74,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
-  },
-  optimizeDeps: {
-    include: ["react-map-gl/mapbox", "mapbox-gl"],
-  },
-  build: {
-    commonjsOptions: {
-      include: [/node_modules/],
-    },
   },
 }));

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { api, type DbPhoto, type DbProperty, getImageUrl } from "@/lib/api";
+import { supabase, SUPABASE_CONFIGURED } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
-export type { DbPhoto, DbProperty } from "@/lib/api";
+export type DbProperty = Tables<"properties">;
+export type DbPhoto = Tables<"property_photos">;
 
 export interface Property {
   id: string;
@@ -27,12 +29,6 @@ export interface Property {
   whatsapp: string;
 }
 
-function parseSafeCoord(value: number | string | null | undefined): number {
-  if (value == null || value === "") return NaN;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : NaN;
-}
-
 function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
   const propertyPhotos = photos
     .filter((ph) => ph.property_id === p.id && ph.published)
@@ -42,10 +38,9 @@ function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
       return a.sort_order - b.sort_order;
     });
 
-  const images =
-    propertyPhotos.length > 0
-      ? propertyPhotos.map((ph) => getImageUrl(ph.url))
-      : ["/placeholder.svg"];
+  const images = propertyPhotos.length > 0
+    ? propertyPhotos.map((ph) => ph.url)
+    : ["/placeholder.svg"];
 
   return {
     id: p.id,
@@ -66,8 +61,8 @@ function mapDbToProperty(p: DbProperty, photos: DbPhoto[]): Property {
     status: p.status,
     images,
     amenities: p.amenities ?? [],
-    lat: parseSafeCoord(p.lat),
-    lng: parseSafeCoord(p.lng),
+    lat: Number(p.lat ?? 0),
+    lng: Number(p.lng ?? 0),
     whatsapp: p.whatsapp ?? "",
   };
 }
@@ -77,16 +72,24 @@ export function useProperties() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [props, photos] = await Promise.all([api.getProperties(), api.getPhotos()]);
-        setProperties(props.map((property) => mapDbToProperty(property, photos)));
-      } finally {
-        setLoading(false);
-      }
+    if (!SUPABASE_CONFIGURED) {
+      setLoading(false);
+      return;
     }
 
-    fetchData();
+    async function fetch() {
+      const [{ data: props }, { data: photos }] = await Promise.all([
+        supabase.from("properties").select("*").order("created_at", { ascending: false }),
+        supabase.from("property_photos").select("*"),
+      ]);
+
+      if (props) {
+        setProperties(props.map((p) => mapDbToProperty(p, photos ?? [])));
+      }
+      setLoading(false);
+    }
+
+    fetch();
   }, []);
 
   return { properties, loading };
@@ -97,23 +100,24 @@ export function useProperty(id: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) {
+    if (!SUPABASE_CONFIGURED || !id) {
       setLoading(false);
       return;
     }
 
-    async function fetchData() {
-      try {
-        const [prop, photos] = await Promise.all([api.getProperty(id), api.getPhotos()]);
-        setProperty(mapDbToProperty(prop, photos));
-      } catch {
-        setProperty(null);
-      } finally {
-        setLoading(false);
+    async function fetch() {
+      const [{ data: prop }, { data: photos }] = await Promise.all([
+        supabase.from("properties").select("*").eq("id", id!).single(),
+        supabase.from("property_photos").select("*").eq("property_id", id!),
+      ]);
+
+      if (prop) {
+        setProperty(mapDbToProperty(prop, photos ?? []));
       }
+      setLoading(false);
     }
 
-    fetchData();
+    fetch();
   }, [id]);
 
   return { property, loading };

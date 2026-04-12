@@ -1,33 +1,21 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-paradise.png";
-import { usePublicMenu } from "@/hooks/useCms";
-import { useSettings } from "@/contexts/SettingsContext";
-import { useAuth } from "@/hooks/useAuth";
 
-const fallbackNavLinks = [
+const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/aluguel", label: "Imoveis" },
-  { to: "/sobre", label: "Sobre Nos" },
+  { to: "/aluguel", label: "Imóveis" },
+  { to: "/sobre", label: "Sobre Nós" },
   { to: "/contato", label: "Contato" },
+  { to: "/admin", label: "Admin" },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
   const isHome = location.pathname === "/";
-  const { data: menuItems } = usePublicMenu("main");
-  const { settings } = useSettings();
-
-  const navLinks = menuItems?.length
-    ? menuItems.map((item) => ({ to: item.url, label: item.label }))
-    : fallbackNavLinks;
-
-  const brandName = String(settings.brand_name || "Paradise Beach");
-  const [brandPrimary, brandSecondary = "Beach"] = brandName.split(" ");
 
   return (
     <nav className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${isHome ? "bg-foreground/20 backdrop-blur-md" : "bg-card/95 backdrop-blur-md shadow-card"}`}>
@@ -35,7 +23,7 @@ export default function Navbar() {
         <Link to="/" className="flex items-center gap-2.5">
           <img src={logoImg} alt="Paradise Beach" className="h-10 w-10 rounded-full object-cover bg-white/90 p-0.5 sm:h-11 sm:w-11" />
           <span className={`font-serif text-xl font-bold tracking-tight sm:text-2xl ${isHome ? "text-primary-foreground" : "text-primary"}`}>
-            {brandPrimary}<span className="text-gradient-gold">{brandSecondary}</span>
+            Paradise<span className="text-gradient-gold">Beach</span>
           </span>
         </Link>
 
@@ -53,33 +41,6 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-          
-          {user?.role === "admin" && (
-            <Link
-              to="/admin"
-              className={`text-sm font-medium tracking-wide transition-colors hover:text-primary ${isHome ? "text-primary-foreground/80" : "text-muted-foreground"}`}
-            >
-              Painel Admin
-            </Link>
-          )}
-
-          {user ? (
-            <Link
-              to="/perfil"
-              className={`flex items-center gap-2 text-sm font-bold tracking-wide transition-all px-4 py-2 rounded-full border border-primary/20 hover:bg-primary/5 ${isHome ? "text-primary-foreground" : "text-primary"}`}
-            >
-              <User size={16} />
-              <span>Minha Conta</span>
-            </Link>
-          ) : (
-            <Link
-              to="/login"
-              className={`text-sm font-medium tracking-wide transition-colors hover:text-primary ${isHome ? "text-primary-foreground/80" : "text-muted-foreground"}`}
-            >
-              Entrar
-            </Link>
-          )}
-
           <Link
             to="/contato"
             data-magnetic
@@ -117,35 +78,6 @@ export default function Navbar() {
                   {l.label}
                 </Link>
               ))}
-              
-              {user ? (
-                <Link
-                  to="/perfil"
-                  onClick={() => setOpen(false)}
-                  className={`rounded-md py-2 text-base font-bold transition-colors ${location.pathname === "/perfil" ? "text-primary" : "text-foreground"}`}
-                >
-                  Minha Conta
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setOpen(false)}
-                  className={`rounded-md py-2 text-base font-medium transition-colors ${location.pathname === "/login" ? "text-primary" : "text-foreground"}`}
-                >
-                  Entrar
-                </Link>
-              )}
-
-              {user?.role === "admin" && (
-                <Link
-                  to="/admin"
-                  onClick={() => setOpen(false)}
-                  className="rounded-md py-2 text-base font-medium text-muted-foreground"
-                >
-                  Painel Admin
-                </Link>
-              )}
-
               <Link
                 to="/contato"
                 onClick={() => setOpen(false)}
@@ -160,4 +92,3 @@ export default function Navbar() {
     </nav>
   );
 }
-

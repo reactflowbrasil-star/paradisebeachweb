@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +7,53 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { api, type DbPhoto, type DbProperty, type DbReservation, getImageUrl } from "@/lib/api";
-import { CalendarDays, Camera, Home, Loader2, LogOut, Plus, Sparkles, Trash2, Upload, Users } from "lucide-react";
+import { CalendarDays, Camera, Check, ChevronsUpDown, Home, Loader2, LogOut, Plus, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+
+type DbProperty = Tables<"properties">;
+type DbPhoto = Tables<"property_photos">;
+type DbReservation = Tables<"reservations">;
+
+function PropertyCombobox({ properties, value, onChange }: { properties: DbProperty[]; value: string; onChange: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = properties.find(p => p.id === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between h-10 font-normal">
+          {selected ? selected.title : "Selecione um imóvel..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar imóvel..." />
+          <CommandList>
+            <CommandEmpty>Nenhum imóvel encontrado.</CommandEmpty>
+            <CommandGroup>
+              {properties.map(p => (
+                <CommandItem key={p.id} value={`${p.title} ${p.city} ${p.state}`} onSelect={() => { onChange(p.id); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4", value === p.id ? "opacity-100" : "opacity-0")} />
+                  <div className="flex flex-col">
+                    <span>{p.title}</span>
+                    <span className="text-xs text-muted-foreground">{p.city}/{p.state}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 const formatPrice = (price: number, label?: string | null) =>
   `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
@@ -21,21 +64,24 @@ const statusColor: Record<string, string> = {
   cancelada: "bg-rose-100 text-rose-700",
 };
 
-function LoginForm() {
-  const { signIn } = useAuth();
+function LoginForm({ onLogin }: { onLogin: () => void }) {
+  const { signIn, signUp, configured, configError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const error = await signIn(email, password);
+    const error = isSignUp ? await signUp(email, password) : await signIn(email, password);
     setLoading(false);
     if (error) {
       toast.error(error.message);
+    } else if (isSignUp) {
+      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
     } else {
-      toast.success("Login realizado com sucesso.");
+      onLogin();
     }
   };
 
@@ -43,10 +89,18 @@ function LoginForm() {
     <section className="mobile-shell flex min-h-screen items-center justify-center py-28">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Login administrativo</CardTitle>
-          <CardDescription>Entre com as credenciais definidas no backend local.</CardDescription>
+          <CardTitle>{isSignUp ? "Criar conta" : "Login administrativo"}</CardTitle>
+          <CardDescription>
+            {isSignUp ? "Crie uma conta para acessar o painel." : "Entre com suas credenciais para acessar o painel."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          {!configured ? (
+            <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
+              <p className="font-medium">Backend não configurado</p>
+              <p>{configError}</p>
+            </div>
+          ) : null}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email">E-mail</Label>
@@ -54,11 +108,14 @@ function LoginForm() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !configured}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Entrar
+              {isSignUp ? "Criar conta" : "Entrar"}
+            </Button>
+            <Button type="button" variant="link" className="w-full" onClick={() => setIsSignUp(!isSignUp)}>
+              {isSignUp ? "Já tem conta? Entrar" : "Criar uma conta"}
             </Button>
           </form>
         </CardContent>
@@ -75,46 +132,30 @@ function AdminPanel() {
   const [dataLoading, setDataLoading] = useState(true);
   const [propertySearch, setPropertySearch] = useState("");
   const [reservationFilter, setReservationFilter] = useState<string>("todas");
-  const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
 
   const [propertyForm, setPropertyForm] = useState({
-    title: "",
-    type: "casa" as DbProperty["type"],
-    price: "",
-    city: "",
-    state: "",
-    location: "",
-    description: "",
-    bedrooms: "0",
-    bathrooms: "0",
-    area: "0",
-    whatsapp: "",
+    title: "", type: "casa" as DbProperty["type"],
+    price: "", city: "", state: "", location: "", description: "",
+    bedrooms: "0", bathrooms: "0", area: "0", whatsapp: "",
   });
   const [reservationForm, setReservationForm] = useState({
-    propertyId: "",
-    guestName: "",
-    email: "",
+    propertyId: "", guestName: "", email: "",
     checkIn: new Date().toISOString().split("T")[0],
-    checkOut: new Date().toISOString().split("T")[0],
-    total: "",
+    checkOut: new Date().toISOString().split("T")[0], total: "",
   });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const fetchAll = useCallback(async () => {
     setDataLoading(true);
-    try {
-      const [propsData, photosData, reservationsData] = await Promise.all([
-        api.getProperties(),
-        api.getPhotos(),
-        api.getReservations(),
-      ]);
-      setProperties(propsData);
-      setPhotos(photosData);
-      setReservations(reservationsData);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao carregar dados.");
-    } finally {
-      setDataLoading(false);
-    }
+    const [propsRes, photosRes, resRes] = await Promise.all([
+      supabase.from("properties").select("*").order("created_at", { ascending: false }),
+      supabase.from("property_photos").select("*").order("created_at", { ascending: false }),
+      supabase.from("reservations").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (propsRes.data) setProperties(propsRes.data);
+    if (photosRes.data) setPhotos(photosRes.data);
+    if (resRes.data) setReservations(resRes.data);
+    setDataLoading(false);
   }, []);
 
   useEffect(() => {
@@ -123,173 +164,167 @@ function AdminPanel() {
 
   useEffect(() => {
     if (properties.length > 0 && !reservationForm.propertyId) {
-      setReservationForm((prev) => ({ ...prev, propertyId: properties[0].id }));
+      setReservationForm(prev => ({ ...prev, propertyId: properties[0].id }));
     }
   }, [properties, reservationForm.propertyId]);
 
   const dashboardMetrics = useMemo(() => {
-    const confirmed = reservations.filter((r) => r.status === "confirmada");
-    const pending = reservations.filter((r) => r.status === "pendente");
+    const confirmed = reservations.filter(r => r.status === "confirmada");
+    const pending = reservations.filter(r => r.status === "pendente");
     return {
       totalProperties: properties.length,
       totalPhotos: photos.length,
       confirmedBookings: confirmed.length,
       pendingBookings: pending.length,
       monthlyRevenue: confirmed.reduce((sum, r) => sum + Number(r.total), 0),
-      featuredProperties: properties.filter((p) => p.featured).length,
-      totalGuests: new Set(reservations.map((r) => r.email)).size,
+      featuredProperties: properties.filter(p => p.featured).length,
+      totalGuests: new Set(reservations.map(r => r.email)).size,
     };
   }, [properties, photos, reservations]);
 
   const propertyNameById = useMemo(
-    () => Object.fromEntries(properties.map((p) => [p.id, p.title])),
-    [properties]
+    () => Object.fromEntries(properties.map(p => [p.id, p.title])),
+    [properties],
   );
 
   const filteredProperties = useMemo(() => {
     const q = propertySearch.toLowerCase().trim();
     if (!q) return properties;
-    return properties.filter((p) =>
-      `${p.title} ${p.city} ${p.state} ${p.location}`.toLowerCase().includes(q)
+    return properties.filter(p =>
+      `${p.title} ${p.city} ${p.state} ${p.location}`.toLowerCase().includes(q),
     );
   }, [properties, propertySearch]);
 
   const filteredReservations = useMemo(() => {
     if (reservationFilter === "todas") return reservations;
-    return reservations.filter((r) => r.status === reservationFilter);
+    return reservations.filter(r => r.status === reservationFilter);
   }, [reservations, reservationFilter]);
 
+  // ---- CRUD ----
   const addProperty = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      await api.createProperty({
-        title: propertyForm.title,
-        type: propertyForm.type,
-        listing: "aluguel",
-        price: Number(propertyForm.price),
-        city: propertyForm.city,
-        state: propertyForm.state,
-        location: propertyForm.location,
-        description: propertyForm.description,
-        bedrooms: Number(propertyForm.bedrooms),
-        bathrooms: Number(propertyForm.bathrooms),
-        area: Number(propertyForm.area),
-        whatsapp: propertyForm.whatsapp,
-        amenities: [],
-      });
-      toast.success("Imóvel cadastrado!");
-      setPropertyForm({
-        title: "",
-        type: "casa",
-        price: "",
-        city: "",
-        state: "",
-        location: "",
-        description: "",
-        bedrooms: "0",
-        bathrooms: "0",
-        area: "0",
-        whatsapp: "",
-      });
-      fetchAll();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar imóvel.");
-    }
+    const payload: TablesInsert<"properties"> = {
+      title: propertyForm.title,
+      type: propertyForm.type,
+      listing: "aluguel",
+      price: Number(propertyForm.price),
+      city: propertyForm.city,
+      state: propertyForm.state,
+      location: propertyForm.location,
+      description: propertyForm.description,
+      bedrooms: Number(propertyForm.bedrooms),
+      bathrooms: Number(propertyForm.bathrooms),
+      area: Number(propertyForm.area),
+      whatsapp: propertyForm.whatsapp,
+    };
+    const { error } = await supabase.from("properties").insert(payload);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Imóvel cadastrado!");
+    setPropertyForm({ title: "", type: "casa", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0", whatsapp: "" });
+    fetchAll();
   };
 
   const removeProperty = async (id: string) => {
-    try {
-      await api.deleteProperty(id);
-      toast.success("Imóvel removido.");
-      fetchAll();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao remover imóvel.");
-    }
+    const { error } = await supabase.from("properties").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Imóvel removido.");
+    fetchAll();
   };
 
-  const toggleFeatured = async (property: DbProperty) => {
-    await api.updateProperty(property.id, { featured: !property.featured });
+  const toggleFeatured = async (p: DbProperty) => {
+    await supabase.from("properties").update({ featured: !p.featured }).eq("id", p.id);
     fetchAll();
   };
 
   const changeStatus = async (id: string, status: DbProperty["status"]) => {
-    await api.updateProperty(id, { status });
+    await supabase.from("properties").update({ status }).eq("id", id);
     fetchAll();
   };
 
   const updateWhatsapp = async (id: string, whatsapp: string) => {
-    await api.updateProperty(id, { whatsapp });
+    await supabase.from("properties").update({ whatsapp }).eq("id", id);
     fetchAll();
   };
 
+  // Photo upload (multiple)
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, propertyId: string) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    setUploadingPhotoFor(propertyId);
-    try {
-      await api.uploadPhotos(propertyId, Array.from(files));
-      toast.success("Fotos enviadas!");
-      fetchAll();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar fotos.");
-    } finally {
-      setUploadingPhotoFor(null);
-      e.target.value = "";
+    setUploadingPhoto(true);
+
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop();
+      const path = `${propertyId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("property-photos")
+        .upload(path, file);
+
+      if (uploadError) {
+        toast.error(`Erro no upload: ${uploadError.message}`);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage.from("property-photos").getPublicUrl(path);
+
+      await supabase.from("property_photos").insert({
+        property_id: propertyId,
+        url: urlData.publicUrl,
+        caption: file.name.replace(/\.[^.]+$/, ""),
+      });
     }
+
+    toast.success("Fotos enviadas!");
+    setUploadingPhoto(false);
+    fetchAll();
   };
 
   const togglePhotoPublished = async (photo: DbPhoto) => {
-    await api.updatePhoto(photo.id, { published: !photo.published });
+    await supabase.from("property_photos").update({ published: !photo.published }).eq("id", photo.id);
     fetchAll();
   };
 
   const makePhotoCover = async (photo: DbPhoto) => {
-    await api.updatePhoto(photo.id, { cover: true });
+    await supabase.from("property_photos").update({ cover: false }).eq("property_id", photo.property_id);
+    await supabase.from("property_photos").update({ cover: true }).eq("id", photo.id);
     fetchAll();
   };
 
   const deletePhoto = async (photo: DbPhoto) => {
-    await api.deletePhoto(photo.id);
+    const urlParts = photo.url.split("/property-photos/");
+    if (urlParts[1]) {
+      await supabase.storage.from("property-photos").remove([urlParts[1]]);
+    }
+    await supabase.from("property_photos").delete().eq("id", photo.id);
     toast.success("Foto removida.");
     fetchAll();
   };
 
+  // Reservations
   const addReservation = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      await api.createReservation({
-        property_id: reservationForm.propertyId,
-        guest_name: reservationForm.guestName,
-        email: reservationForm.email,
-        check_in: reservationForm.checkIn,
-        check_out: reservationForm.checkOut,
-        total: Number(reservationForm.total),
-      });
-      toast.success("Reserva criada!");
-      setReservationForm({
-        propertyId: properties[0]?.id ?? "",
-        guestName: "",
-        email: "",
-        checkIn: new Date().toISOString().split("T")[0],
-        checkOut: new Date().toISOString().split("T")[0],
-        total: "",
-      });
-      fetchAll();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao criar reserva.");
-    }
-  };
-
-  const cycleReservationStatus = async (reservation: DbReservation) => {
-    const next: Record<string, DbReservation["status"]> = {
-      pendente: "confirmada",
-      confirmada: "cancelada",
-      cancelada: "pendente",
+    const payload: TablesInsert<"reservations"> = {
+      property_id: reservationForm.propertyId,
+      guest_name: reservationForm.guestName,
+      email: reservationForm.email,
+      check_in: reservationForm.checkIn,
+      check_out: reservationForm.checkOut,
+      total: Number(reservationForm.total),
     };
-    await api.updateReservation(reservation.id, { status: next[reservation.status] });
+    const { error } = await supabase.from("reservations").insert(payload);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Reserva criada!");
+    setReservationForm({ propertyId: properties[0]?.id ?? "", guestName: "", email: "", checkIn: new Date().toISOString().split("T")[0], checkOut: new Date().toISOString().split("T")[0], total: "" });
     fetchAll();
   };
 
+  const cycleReservationStatus = async (r: DbReservation) => {
+    const next: Record<string, DbReservation["status"]> = { pendente: "confirmada", confirmada: "cancelada", cancelada: "pendente" };
+    await supabase.from("reservations").update({ status: next[r.status] }).eq("id", r.id);
+    fetchAll();
+  };
+
+  // Auth gate
   if (authLoading) {
     return (
       <section className="mobile-shell flex min-h-screen items-center justify-center">
@@ -299,7 +334,7 @@ function AdminPanel() {
   }
 
   if (!user) {
-    return <LoginForm />;
+    return <LoginForm onLogin={fetchAll} />;
   }
 
   return (
@@ -324,10 +359,30 @@ function AdminPanel() {
       ) : (
         <>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card><CardHeader className="pb-2"><CardDescription>Imóveis cadastrados</CardDescription><CardTitle className="flex items-center gap-2 text-3xl"><Home className="h-6 w-6 text-primary" />{dashboardMetrics.totalProperties}</CardTitle></CardHeader></Card>
-            <Card><CardHeader className="pb-2"><CardDescription>Fotos no sistema</CardDescription><CardTitle className="flex items-center gap-2 text-3xl"><Camera className="h-6 w-6 text-primary" />{dashboardMetrics.totalPhotos}</CardTitle></CardHeader></Card>
-            <Card><CardHeader className="pb-2"><CardDescription>Reservas confirmadas</CardDescription><CardTitle className="flex items-center gap-2 text-3xl"><CalendarDays className="h-6 w-6 text-primary" />{dashboardMetrics.confirmedBookings}</CardTitle></CardHeader></Card>
-            <Card><CardHeader className="pb-2"><CardDescription>Hóspedes únicos</CardDescription><CardTitle className="flex items-center gap-2 text-3xl"><Users className="h-6 w-6 text-primary" />{dashboardMetrics.totalGuests}</CardTitle></CardHeader></Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Imóveis cadastrados</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><Home className="h-6 w-6 text-primary" />{dashboardMetrics.totalProperties}</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Fotos no sistema</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><Camera className="h-6 w-6 text-primary" />{dashboardMetrics.totalPhotos}</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Reservas confirmadas</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><CalendarDays className="h-6 w-6 text-primary" />{dashboardMetrics.confirmedBookings}</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Hóspedes únicos</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-3xl"><Users className="h-6 w-6 text-primary" />{dashboardMetrics.totalGuests}</CardTitle>
+              </CardHeader>
+            </Card>
           </div>
 
           <Tabs defaultValue="properties" className="mt-8 space-y-4">
@@ -338,6 +393,7 @@ function AdminPanel() {
               <TabsTrigger value="crm">CRM & receita</TabsTrigger>
             </TabsList>
 
+            {/* ---- PROPRIEDADES ---- */}
             <TabsContent value="properties" className="space-y-5">
               <Card>
                 <CardHeader>
@@ -346,33 +402,74 @@ function AdminPanel() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={addProperty} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <div className="space-y-1.5 xl:col-span-2"><Label htmlFor="title">Título</Label><Input id="title" value={propertyForm.title} onChange={(e) => setPropertyForm((prev) => ({ ...prev, title: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="price">Preço / diária</Label><Input id="price" type="number" min={0} value={propertyForm.price} onChange={(e) => setPropertyForm((prev) => ({ ...prev, price: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="city">Cidade</Label><Input id="city" value={propertyForm.city} onChange={(e) => setPropertyForm((prev) => ({ ...prev, city: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="state">UF</Label><Input id="state" value={propertyForm.state} onChange={(e) => setPropertyForm((prev) => ({ ...prev, state: e.target.value.toUpperCase() }))} maxLength={2} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="location">Região</Label><Input id="location" value={propertyForm.location} onChange={(e) => setPropertyForm((prev) => ({ ...prev, location: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="type">Tipo</Label>
-                      <select id="type" value={propertyForm.type} onChange={(e) => setPropertyForm((prev) => ({ ...prev, type: e.target.value as DbProperty["type"] }))} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
-                        <option value="casa">Casa</option><option value="villa">Villa</option><option value="apartamento">Apartamento</option><option value="terreno">Terreno</option>
+                    <div className="space-y-1.5 xl:col-span-2">
+                      <Label htmlFor="title">Título</Label>
+                      <Input id="title" value={propertyForm.title} onChange={(e) => setPropertyForm(prev => ({ ...prev, title: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="price">Preço / diária</Label>
+                      <Input id="price" type="number" min={0} value={propertyForm.price} onChange={(e) => setPropertyForm(prev => ({ ...prev, price: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="city">Cidade</Label>
+                      <Input id="city" value={propertyForm.city} onChange={(e) => setPropertyForm(prev => ({ ...prev, city: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="state">UF</Label>
+                      <Input id="state" value={propertyForm.state} onChange={(e) => setPropertyForm(prev => ({ ...prev, state: e.target.value.toUpperCase() }))} maxLength={2} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="location">Região</Label>
+                      <Input id="location" value={propertyForm.location} onChange={(e) => setPropertyForm(prev => ({ ...prev, location: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="type">Tipo</Label>
+                      <select id="type" value={propertyForm.type} onChange={(e) => setPropertyForm(prev => ({ ...prev, type: e.target.value as DbProperty["type"] }))} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="casa">Casa</option>
+                        <option value="villa">Villa</option>
+                        <option value="apartamento">Apartamento</option>
+                        <option value="terreno">Terreno</option>
                       </select>
                     </div>
-                    <div className="space-y-1.5"><Label htmlFor="bedrooms">Quartos</Label><Input id="bedrooms" type="number" min={0} value={propertyForm.bedrooms} onChange={(e) => setPropertyForm((prev) => ({ ...prev, bedrooms: e.target.value }))} /></div>
-                    <div className="space-y-1.5"><Label htmlFor="bathrooms">Banheiros</Label><Input id="bathrooms" type="number" min={0} value={propertyForm.bathrooms} onChange={(e) => setPropertyForm((prev) => ({ ...prev, bathrooms: e.target.value }))} /></div>
-                    <div className="space-y-1.5"><Label htmlFor="area">Área (m²)</Label><Input id="area" type="number" min={0} value={propertyForm.area} onChange={(e) => setPropertyForm((prev) => ({ ...prev, area: e.target.value }))} /></div>
-                    <div className="space-y-1.5"><Label htmlFor="whatsapp">WhatsApp</Label><Input id="whatsapp" placeholder="5573999990000" value={propertyForm.whatsapp} onChange={(e) => setPropertyForm((prev) => ({ ...prev, whatsapp: e.target.value }))} /></div>
-                    <div className="space-y-1.5 md:col-span-2 xl:col-span-3"><Label htmlFor="description">Descrição</Label><Textarea id="description" value={propertyForm.description} onChange={(e) => setPropertyForm((prev) => ({ ...prev, description: e.target.value }))} rows={3} required /></div>
-                    <div className="md:col-span-2 xl:col-span-3"><Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar imóvel</Button></div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bedrooms">Quartos</Label>
+                      <Input id="bedrooms" type="number" min={0} value={propertyForm.bedrooms} onChange={(e) => setPropertyForm(prev => ({ ...prev, bedrooms: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bathrooms">Banheiros</Label>
+                      <Input id="bathrooms" type="number" min={0} value={propertyForm.bathrooms} onChange={(e) => setPropertyForm(prev => ({ ...prev, bathrooms: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="area">Área (m²)</Label>
+                      <Input id="area" type="number" min={0} value={propertyForm.area} onChange={(e) => setPropertyForm(prev => ({ ...prev, area: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <Input id="whatsapp" placeholder="5573999990000" value={propertyForm.whatsapp} onChange={(e) => setPropertyForm(prev => ({ ...prev, whatsapp: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2 xl:col-span-3">
+                      <Label htmlFor="description">Descrição</Label>
+                      <Textarea id="description" value={propertyForm.description} onChange={(e) => setPropertyForm(prev => ({ ...prev, description: e.target.value }))} rows={3} required />
+                    </div>
+                    <div className="md:col-span-2 xl:col-span-3">
+                      <Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar imóvel</Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader><CardTitle>Catálogo de imóveis</CardTitle><CardDescription>Busque por título, cidade ou localização.</CardDescription></CardHeader>
+                <CardHeader>
+                  <CardTitle>Catálogo de imóveis</CardTitle>
+                  <CardDescription>Busque por título, cidade ou localização.</CardDescription>
+                </CardHeader>
                 <CardContent className="space-y-3">
                   <Input placeholder="Buscar imóvel..." value={propertySearch} onChange={(e) => setPropertySearch(e.target.value)} />
-                  {filteredProperties.length === 0 && <p className="py-8 text-center text-muted-foreground">Nenhum imóvel cadastrado.</p>}
+                  {filteredProperties.length === 0 && (
+                    <p className="py-8 text-center text-muted-foreground">Nenhum imóvel cadastrado.</p>
+                  )}
                   {filteredProperties.map((property) => {
-                    const propPhotos = photos.filter((ph) => ph.property_id === property.id);
+                    const propPhotos = photos.filter(ph => ph.property_id === property.id);
                     return (
                       <div key={property.id} className="space-y-3 rounded-lg border p-4">
                         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -381,14 +478,29 @@ function AdminPanel() {
                             <p className="text-sm text-muted-foreground">{property.city}/{property.state} • {formatPrice(property.price, property.price_label)}</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            <Button variant={property.featured ? "secondary" : "outline"} size="sm" onClick={() => toggleFeatured(property)}><Sparkles className="mr-2 h-4 w-4" />{property.featured ? "Destaque" : "Destacar"}</Button>
-                            <Button variant="destructive" size="sm" className="gap-2" onClick={() => removeProperty(property.id)}><Trash2 className="h-4 w-4" />Excluir</Button>
+                            <Button variant={property.featured ? "secondary" : "outline"} size="sm" onClick={() => toggleFeatured(property)}>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              {property.featured ? "Destaque" : "Destacar"}
+                            </Button>
+                            <Button variant="destructive" size="sm" className="gap-2" onClick={() => removeProperty(property.id)}>
+                              <Trash2 className="h-4 w-4" />Excluir
+                            </Button>
                           </div>
                         </div>
 
+                        {/* WhatsApp inline */}
                         <div className="flex items-center gap-2">
-                          <Label className="shrink-0 text-sm">WhatsApp:</Label>
-                          <Input className="h-8 max-w-[200px]" placeholder="5573999990000" defaultValue={property.whatsapp ?? ""} onBlur={(e) => { if (e.target.value !== (property.whatsapp ?? "")) { updateWhatsapp(property.id, e.target.value); } }} />
+                          <Label className="text-sm shrink-0">WhatsApp:</Label>
+                          <Input
+                            className="h-8 max-w-[200px]"
+                            placeholder="5573999990000"
+                            defaultValue={property.whatsapp ?? ""}
+                            onBlur={(e) => {
+                              if (e.target.value !== (property.whatsapp ?? "")) {
+                                updateWhatsapp(property.id, e.target.value);
+                              }
+                            }}
+                          />
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -396,25 +508,26 @@ function AdminPanel() {
                           <select className="h-8 rounded-md border border-input bg-background px-2" value={property.status} onChange={(e) => changeStatus(property.id, e.target.value as DbProperty["status"])}>
                             <option value="disponivel">Disponível</option>
                             <option value="alugado">Alugado</option>
-                            <option value="vendido">Vendido</option>
                           </select>
                           <Badge className="bg-muted text-foreground">{property.type}</Badge>
+
                           <label className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border border-input px-3 py-1.5 text-sm transition hover:bg-accent">
                             <Upload className="h-4 w-4" />
-                            <span>{uploadingPhotoFor === property.id ? "Enviando..." : "Upload fotos"}</span>
-                            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handlePhotoUpload(e, property.id)} disabled={uploadingPhotoFor === property.id} />
+                            <span>{uploadingPhoto ? "Enviando..." : "Upload fotos"}</span>
+                            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handlePhotoUpload(e, property.id)} disabled={uploadingPhoto} />
                           </label>
                         </div>
 
+                        {/* Inline photo gallery */}
                         {propPhotos.length > 0 && (
                           <div className="flex flex-wrap gap-2 pt-2">
                             {propPhotos.map((photo) => (
-                              <div key={photo.id} className="group relative">
-                                <img src={getImageUrl(photo.url)} alt={photo.caption} className="h-16 w-20 rounded-md object-cover" />
-                                {photo.cover && <span className="absolute left-0 top-0 rounded-br bg-primary px-1 text-[10px] text-primary-foreground">Capa</span>}
-                                <div className="absolute inset-0 flex items-center justify-center gap-1 rounded-md bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                                  <button onClick={() => makePhotoCover(photo)} className="rounded bg-primary/80 px-1 text-[10px] text-white">Capa</button>
-                                  <button onClick={() => deletePhoto(photo)} className="rounded bg-destructive/80 px-1 text-[10px] text-white">×</button>
+                              <div key={photo.id} className="relative group">
+                                <img src={photo.url} alt={photo.caption} className="h-16 w-20 rounded-md object-cover" />
+                                {photo.cover && <span className="absolute top-0 left-0 bg-primary text-primary-foreground text-[10px] px-1 rounded-br">Capa</span>}
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-1">
+                                  <button onClick={() => makePhotoCover(photo)} className="text-white text-[10px] bg-primary/80 px-1 rounded">Capa</button>
+                                  <button onClick={() => deletePhoto(photo)} className="text-white text-[10px] bg-destructive/80 px-1 rounded">×</button>
                                 </div>
                               </div>
                             ))}
@@ -427,22 +540,34 @@ function AdminPanel() {
               </Card>
             </TabsContent>
 
+            {/* ---- FOTOS ---- */}
             <TabsContent value="photos" className="space-y-5">
               <Card>
-                <CardHeader><CardTitle>Biblioteca de fotos ({photos.length})</CardTitle><CardDescription>Controle publicação e escolha a capa principal de cada imóvel.</CardDescription></CardHeader>
+                <CardHeader>
+                  <CardTitle>Biblioteca de fotos ({photos.length})</CardTitle>
+                  <CardDescription>Controle publicação e escolha a capa principal de cada imóvel.</CardDescription>
+                </CardHeader>
                 <CardContent className="grid gap-3">
-                  {photos.length === 0 && <p className="py-8 text-center text-muted-foreground">Nenhuma foto. Faça upload pela aba Propriedades.</p>}
+                  {photos.length === 0 && (
+                    <p className="py-8 text-center text-muted-foreground">Nenhuma foto. Faça upload pela aba Propriedades.</p>
+                  )}
                   {photos.map((photo) => (
                     <div key={photo.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center">
-                      <img src={getImageUrl(photo.url)} alt={photo.caption} className="h-20 w-28 shrink-0 rounded-md object-cover" />
+                      <img src={photo.url} alt={photo.caption} className="h-20 w-28 shrink-0 rounded-md object-cover" />
                       <div className="flex-1">
                         <p className="font-medium">{photo.caption}</p>
                         <p className="text-sm text-muted-foreground">{propertyNameById[photo.property_id] ?? "Imóvel removido"}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant={photo.cover ? "secondary" : "outline"} onClick={() => makePhotoCover(photo)}>{photo.cover ? "Capa ✓" : "Definir capa"}</Button>
-                        <Button size="sm" variant={photo.published ? "secondary" : "outline"} onClick={() => togglePhotoPublished(photo)}>{photo.published ? "Publicado" : "Oculto"}</Button>
-                        <Button size="sm" variant="destructive" onClick={() => deletePhoto(photo)}><Trash2 className="h-4 w-4" /></Button>
+                        <Button size="sm" variant={photo.cover ? "secondary" : "outline"} onClick={() => makePhotoCover(photo)}>
+                          {photo.cover ? "Capa ✓" : "Definir capa"}
+                        </Button>
+                        <Button size="sm" variant={photo.published ? "secondary" : "outline"} onClick={() => togglePhotoPublished(photo)}>
+                          {photo.published ? "Publicado" : "Oculto"}
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => deletePhoto(photo)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -450,41 +575,82 @@ function AdminPanel() {
               </Card>
             </TabsContent>
 
+            {/* ---- RESERVAS ---- */}
             <TabsContent value="reservations" className="space-y-5">
               <Card>
-                <CardHeader><CardTitle>Nova reserva</CardTitle><CardDescription>Crie reservas manuais e acompanhe o status.</CardDescription></CardHeader>
+                <CardHeader>
+                  <CardTitle>Nova reserva</CardTitle>
+                  <CardDescription>Crie reservas manuais e acompanhe o status.</CardDescription>
+                </CardHeader>
                 <CardContent>
                   <form onSubmit={addReservation} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="space-y-1.5"><Label htmlFor="res-property">Imóvel</Label><select id="res-property" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={reservationForm.propertyId} onChange={(e) => setReservationForm((prev) => ({ ...prev, propertyId: e.target.value }))} required>{properties.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div>
-                    <div className="space-y-1.5"><Label htmlFor="guestName">Hóspede</Label><Input id="guestName" value={reservationForm.guestName} onChange={(e) => setReservationForm((prev) => ({ ...prev, guestName: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="guestEmail">E-mail</Label><Input id="guestEmail" type="email" value={reservationForm.email} onChange={(e) => setReservationForm((prev) => ({ ...prev, email: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="checkIn">Check-in</Label><Input id="checkIn" type="date" value={reservationForm.checkIn} onChange={(e) => setReservationForm((prev) => ({ ...prev, checkIn: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="checkOut">Check-out</Label><Input id="checkOut" type="date" value={reservationForm.checkOut} onChange={(e) => setReservationForm((prev) => ({ ...prev, checkOut: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label htmlFor="total">Valor total</Label><Input id="total" type="number" min={0} value={reservationForm.total} onChange={(e) => setReservationForm((prev) => ({ ...prev, total: e.target.value }))} required /></div>
-                    <div className="self-end"><Button type="submit">Criar reserva</Button></div>
+                    <div className="space-y-1.5">
+                      <Label>Imóvel</Label>
+                      <PropertyCombobox properties={properties} value={reservationForm.propertyId} onChange={(id) => setReservationForm(prev => ({ ...prev, propertyId: id }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="guestName">Hóspede</Label>
+                      <Input id="guestName" value={reservationForm.guestName} onChange={(e) => setReservationForm(prev => ({ ...prev, guestName: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="guestEmail">E-mail</Label>
+                      <Input id="guestEmail" type="email" value={reservationForm.email} onChange={(e) => setReservationForm(prev => ({ ...prev, email: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="checkIn">Check-in</Label>
+                      <Input id="checkIn" type="date" value={reservationForm.checkIn} onChange={(e) => setReservationForm(prev => ({ ...prev, checkIn: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="checkOut">Check-out</Label>
+                      <Input id="checkOut" type="date" value={reservationForm.checkOut} onChange={(e) => setReservationForm(prev => ({ ...prev, checkOut: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="total">Valor total</Label>
+                      <Input id="total" type="number" min={0} value={reservationForm.total} onChange={(e) => setReservationForm(prev => ({ ...prev, total: e.target.value }))} required />
+                    </div>
+                    <div className="self-end">
+                      <Button type="submit">Criar reserva</Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader><CardTitle>Reservas ({filteredReservations.length})</CardTitle><CardDescription>Filtre por status para priorizar atendimento.</CardDescription></CardHeader>
+                <CardHeader>
+                  <CardTitle>Reservas ({filteredReservations.length})</CardTitle>
+                  <CardDescription>Filtre por status para priorizar atendimento.</CardDescription>
+                </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    {(["todas", "pendente", "confirmada", "cancelada"] as const).map((status) => (
-                      <Button key={status} size="sm" variant={reservationFilter === status ? "secondary" : "outline"} onClick={() => setReservationFilter(status)}>{status}</Button>
+                    {(["todas", "pendente", "confirmada", "cancelada"] as const).map(status => (
+                      <Button key={status} size="sm" variant={reservationFilter === status ? "secondary" : "outline"} onClick={() => setReservationFilter(status)}>
+                        {status}
+                      </Button>
                     ))}
                   </div>
-                  {filteredReservations.length === 0 && <p className="py-8 text-center text-muted-foreground">Nenhuma reserva encontrada.</p>}
-                  {filteredReservations.map((reservation) => (
+
+                  {filteredReservations.length === 0 && (
+                    <p className="py-8 text-center text-muted-foreground">Nenhuma reserva encontrada.</p>
+                  )}
+
+                  {filteredReservations.map(reservation => (
                     <Dialog key={reservation.id}>
                       <DialogTrigger asChild>
                         <button className="w-full rounded-lg border p-4 text-left transition hover:border-primary/50">
-                          <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-semibold">{reservation.guest_name}</p><Badge className={statusColor[reservation.status]}>{reservation.status}</Badge></div>
-                          <p className="mt-1 text-sm text-muted-foreground">{propertyNameById[reservation.property_id]} • {reservation.check_in} a {reservation.check_out} • {formatPrice(Number(reservation.total))}</p>
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <p className="font-semibold">{reservation.guest_name}</p>
+                            <Badge className={statusColor[reservation.status]}>{reservation.status}</Badge>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {propertyNameById[reservation.property_id]} • {reservation.check_in} a {reservation.check_out} • {formatPrice(Number(reservation.total))}
+                          </p>
                         </button>
                       </DialogTrigger>
                       <DialogContent>
-                        <DialogHeader><DialogTitle>Reserva</DialogTitle><DialogDescription>Atualize o status em 1 clique.</DialogDescription></DialogHeader>
+                        <DialogHeader>
+                          <DialogTitle>Reserva</DialogTitle>
+                          <DialogDescription>Atualize o status em 1 clique.</DialogDescription>
+                        </DialogHeader>
                         <div className="space-y-2 text-sm">
                           <p><strong>Imóvel:</strong> {propertyNameById[reservation.property_id]}</p>
                           <p><strong>Hóspede:</strong> {reservation.guest_name}</p>
@@ -500,14 +666,30 @@ function AdminPanel() {
               </Card>
             </TabsContent>
 
+            {/* ---- CRM ---- */}
             <TabsContent value="crm">
               <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" />KPI comercial</CardTitle><CardDescription>Resumo executivo.</CardDescription></CardHeader>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" />KPI comercial</CardTitle>
+                  <CardDescription>Resumo executivo.</CardDescription>
+                </CardHeader>
                 <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-lg border p-4"><p className="text-sm text-muted-foreground">Imóveis destaque</p><p className="text-2xl font-bold text-primary">{dashboardMetrics.featuredProperties}</p></div>
-                  <div className="rounded-lg border p-4"><p className="text-sm text-muted-foreground">Reservas pendentes</p><p className="text-2xl font-bold text-primary">{dashboardMetrics.pendingBookings}</p></div>
-                  <div className="rounded-lg border p-4"><p className="text-sm text-muted-foreground">Receita confirmada</p><p className="text-2xl font-bold text-primary">{formatPrice(dashboardMetrics.monthlyRevenue)}</p></div>
-                  <div className="rounded-lg border p-4"><p className="text-sm text-muted-foreground">Taxa de aprovação</p><p className="text-2xl font-bold text-primary">{reservations.length ? Math.round((dashboardMetrics.confirmedBookings / reservations.length) * 100) : 0}%</p></div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Imóveis destaque</p>
+                    <p className="text-2xl font-bold text-primary">{dashboardMetrics.featuredProperties}</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Reservas pendentes</p>
+                    <p className="text-2xl font-bold text-primary">{dashboardMetrics.pendingBookings}</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Receita confirmada</p>
+                    <p className="text-2xl font-bold text-primary">{formatPrice(dashboardMetrics.monthlyRevenue)}</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-sm text-muted-foreground">Taxa de aprovação</p>
+                    <p className="text-2xl font-bold text-primary">{reservations.length ? Math.round((dashboardMetrics.confirmedBookings / reservations.length) * 100) : 0}%</p>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

@@ -5,31 +5,21 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import PropertiesPage from "./pages/PropertiesPage";
 import PropertyDetail from "./pages/PropertyDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import AuthPage from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminProperties from "./pages/admin/AdminProperties";
-import AdminPhotos from "./pages/admin/AdminPhotos";
-import AdminReservations from "./pages/admin/AdminReservations";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminClients from "./pages/admin/AdminClients";
-import AdminContent from "./pages/admin/AdminContent";
+import AdminPanel from "./pages/AdminPanel";
 import { useWebflowEffects } from "@/hooks/use-webflow-effects";
 import IntroSlides from "@/components/IntroSlides";
-import { SettingsProvider } from "@/contexts/SettingsContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
-function PublicShell() {
+function AppShell() {
   useWebflowEffects();
 
   return (
@@ -44,12 +34,12 @@ function PublicShell() {
           <Route path="/imovel/:id" element={<PropertyDetail />} />
           <Route path="/sobre" element={<About />} />
           <Route path="/contato" element={<Contact />} />
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/perfil" element={<Profile />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
+      <WhatsAppButton />
     </ErrorBoundary>
   );
 }
@@ -57,31 +47,14 @@ function PublicShell() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
-      <AuthProvider>
-        <SettingsProvider>
-          <TooltipProvider>
-          <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <Routes>
-              {/* Admin routes — own layout, no Navbar/Footer */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="propriedades" element={<AdminProperties />} />
-                <Route path="fotos" element={<AdminPhotos />} />
-                <Route path="clientes" element={<AdminClients />} />
-                <Route path="reservas" element={<AdminReservations />} />
-                <Route path="conteudo" element={<AdminContent />} />
-                <Route path="config" element={<AdminSettings />} />
-              </Route>
-              {/* Public routes */}
-              <Route path="/*" element={<PublicShell />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SettingsProvider>
-    </AuthProvider>
-  </HelmetProvider>
-</QueryClientProvider>
+      <TooltipProvider>
+        <Sonner />
+        <BrowserRouter>
+          <AppShell />
+        </BrowserRouter>
+      </TooltipProvider>
+    </HelmetProvider>
+  </QueryClientProvider>
 );
 
 export default App;

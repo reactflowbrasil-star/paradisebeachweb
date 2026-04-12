@@ -1,69 +1,60 @@
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-
-const STORAGE_KEY = "paradise-admin-session";
-
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "user";
-}
+import { SUPABASE_CONFIG_ERROR, SUPABASE_CONFIGURED, supabase } from "@/integrations/supabase/client";
+import type { User, Session } from "@supabase/supabase-js";
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as AuthUser;
-        setUser(parsed);
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
+    if (!SUPABASE_CONFIGURED) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const result = await api.login(email, password);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(result.user));
-      // Save token too if needed for backend auth (api.ts uses request helper which is currently stateless but uses global BASE_URL)
-      // If the backend needs tokens, we'd add it to headers in requests.
-      setUser(result.user);
-      return null;
-    } catch (error) {
-      return error instanceof Error ? error : new Error("Falha ao entrar.");
+    if (!SUPABASE_CONFIGURED) {
+      return new Error(SUPABASE_CONFIG_ERROR ?? "Supabase não configurado.");
     }
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error?.message.toLowerCase().includes("email not confirmed")) {
+      return new Error("Seu e-mail ainda não foi confirmado. Abra sua caixa de entrada e confirme o acesso antes de entrar.");
+    }
+    return error;
   };
 
-  const signUp = async (name: string, email: string, password: string) => {
-    try {
-      const result = await api.register({ name, email, password });
-      // Automagically sign in after register
-      await signIn(email, password);
-      return null;
-    } catch (error) {
-      return error instanceof Error ? error : new Error("Falha ao cadastrar.");
+  const signUp = async (email: string, password: string) => {
+    if (!SUPABASE_CONFIGURED) {
+      return new Error(SUPABASE_CONFIG_ERROR ?? "Supabase não configurado.");
     }
+
+    const { error } = await supabase.auth.signUp({ email, password });
+    return error;
   };
 
   const signOut = async () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
+    if (!SUPABASE_CONFIGURED) return;
+    await supabase.auth.signOut();
   };
 
-  return {
-    user,
-    session: user,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    configured: true,
-    configError: null,
-  };
+  return { user, session, loading, signIn, signUp, signOut, configured: SUPABASE_CONFIGURED, configError: SUPABASE_CONFIG_ERROR };
 }
