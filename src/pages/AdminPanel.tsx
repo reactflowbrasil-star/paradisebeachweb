@@ -20,6 +20,41 @@ type DbProperty = Tables<"properties">;
 type DbPhoto = Tables<"property_photos">;
 type DbReservation = Tables<"reservations">;
 
+function PropertyCombobox({ properties, value, onChange }: { properties: DbProperty[]; value: string; onChange: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = properties.find(p => p.id === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between h-10 font-normal">
+          {selected ? selected.title : "Selecione um imóvel..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar imóvel..." />
+          <CommandList>
+            <CommandEmpty>Nenhum imóvel encontrado.</CommandEmpty>
+            <CommandGroup>
+              {properties.map(p => (
+                <CommandItem key={p.id} value={`${p.title} ${p.city} ${p.state}`} onSelect={() => { onChange(p.id); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4", value === p.id ? "opacity-100" : "opacity-0")} />
+                  <div className="flex flex-col">
+                    <span>{p.title}</span>
+                    <span className="text-xs text-muted-foreground">{p.city}/{p.state}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 const formatPrice = (price: number, label?: string | null) =>
   `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
 
