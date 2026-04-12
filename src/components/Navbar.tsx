@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-paradise.png";
 import { usePublicMenu } from "@/hooks/useCms";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const fallbackNavLinks = [
   { to: "/", label: "Home" },
@@ -16,6 +17,7 @@ const fallbackNavLinks = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
   const isHome = location.pathname === "/";
   const { data: menuItems } = usePublicMenu("main");
   const { settings } = useSettings();
@@ -51,12 +53,33 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-          <Link
-            to="/admin"
-            className={`text-sm font-medium tracking-wide transition-colors hover:text-primary ${isHome ? "text-primary-foreground/80" : "text-muted-foreground"}`}
-          >
-            Admin
-          </Link>
+          
+          {user?.role === "admin" && (
+            <Link
+              to="/admin"
+              className={`text-sm font-medium tracking-wide transition-colors hover:text-primary ${isHome ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+            >
+              Painel Admin
+            </Link>
+          )}
+
+          {user ? (
+            <Link
+              to="/perfil"
+              className={`flex items-center gap-2 text-sm font-bold tracking-wide transition-all px-4 py-2 rounded-full border border-primary/20 hover:bg-primary/5 ${isHome ? "text-primary-foreground" : "text-primary"}`}
+            >
+              <User size={16} />
+              <span>Minha Conta</span>
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className={`text-sm font-medium tracking-wide transition-colors hover:text-primary ${isHome ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+            >
+              Entrar
+            </Link>
+          )}
+
           <Link
             to="/contato"
             data-magnetic
@@ -94,13 +117,35 @@ export default function Navbar() {
                   {l.label}
                 </Link>
               ))}
-              <Link
-                to="/admin"
-                onClick={() => setOpen(false)}
-                className={`rounded-md py-2 text-base font-medium transition-colors ${location.pathname === "/admin" ? "text-primary" : "text-foreground"}`}
-              >
-                Admin
-              </Link>
+              
+              {user ? (
+                <Link
+                  to="/perfil"
+                  onClick={() => setOpen(false)}
+                  className={`rounded-md py-2 text-base font-bold transition-colors ${location.pathname === "/perfil" ? "text-primary" : "text-foreground"}`}
+                >
+                  Minha Conta
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                  className={`rounded-md py-2 text-base font-medium transition-colors ${location.pathname === "/login" ? "text-primary" : "text-foreground"}`}
+                >
+                  Entrar
+                </Link>
+              )}
+
+              {user?.role === "admin" && (
+                <Link
+                  to="/admin"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md py-2 text-base font-medium text-muted-foreground"
+                >
+                  Painel Admin
+                </Link>
+              )}
+
               <Link
                 to="/contato"
                 onClick={() => setOpen(false)}
@@ -115,3 +160,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

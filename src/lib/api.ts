@@ -369,6 +369,7 @@ export const api = {
     }),
   getProperties: () => request<DbProperty[]>("/api/properties.php"),
   getProperty: (id: string) => request<DbProperty>(`/api/property.php?id=${encodeURIComponent(id)}`),
+  getClientReservations: (clientId: string) => request<any[]>(`/api/reservations.php?client_id=${encodeURIComponent(clientId)}`),
   createProperty: (payload: Partial<DbProperty>) =>
     request<DbProperty>("/api/properties.php", {
       method: "POST",

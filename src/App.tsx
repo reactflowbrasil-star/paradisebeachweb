@@ -24,6 +24,8 @@ import AdminContent from "./pages/admin/AdminContent";
 import { useWebflowEffects } from "@/hooks/use-webflow-effects";
 import IntroSlides from "@/components/IntroSlides";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,7 @@ function PublicShell() {
           <Route path="/sobre" element={<About />} />
           <Route path="/contato" element={<Contact />} />
           <Route path="/login" element={<AuthPage />} />
+          <Route path="/perfil" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -54,8 +57,9 @@ function PublicShell() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
-      <SettingsProvider>
-        <TooltipProvider>
+      <AuthProvider>
+        <SettingsProvider>
+          <TooltipProvider>
           <Sonner />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
@@ -75,8 +79,9 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </SettingsProvider>
-    </HelmetProvider>
-  </QueryClientProvider>
+    </AuthProvider>
+  </HelmetProvider>
+</QueryClientProvider>
 );
 
 export default App;
