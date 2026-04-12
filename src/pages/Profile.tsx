@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { api, type DbReservation, getImageUrl } from "@/lib/api";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

@@ -11,8 +11,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (name: string, email: string, password: string) => Promise<User>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -40,13 +40,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(response.user);
     localStorage.setItem("pb_token", response.token);
     localStorage.setItem("pb_user", JSON.stringify(response.user));
+    return response.user;
   };
 
   const register = async (name: string, email: string, password: string) => {
     const response = await api.register({ name, email, password });
     // After registration, we could automatically log them in or ask to login
     // For now, let's just log them in
-    await login(email, password);
+    return await login(email, password);
   };
 
   const logout = () => {

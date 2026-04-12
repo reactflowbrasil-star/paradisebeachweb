@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,13 +10,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export default function AuthPage() {
-  const { signIn, signUp } = useAuth();
+  const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || "/";
@@ -24,21 +24,24 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    let error: Error | null = null;
-    if (mode === "login") {
-      error = await signIn(email, password);
-    } else {
-      error = await signUp(name, email, password);
-    }
-    
-    setLoading(false);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
+
+    try {
+      const loggedUser = mode === "login"
+        ? await login(email, password)
+        : await register(name, email, password);
+
       toast.success(mode === "login" ? "Bem-vindo de volta!" : "Conta criada com sucesso!");
-      navigate(from, { replace: true });
+
+      // Redirect based on user role
+      if (loggedUser.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro inesperado");
+    } finally {
+      setLoading(false);
     }
   };
 
