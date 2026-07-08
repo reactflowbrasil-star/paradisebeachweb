@@ -64,7 +64,17 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     headers["Authorization"] = `Bearer ${token}`;
   }
   const response = await fetch(url, { ...init, headers });
-  const payload = await response.json().catch(() => ({}));
+  const text = await response.text();
+  const looksLikeHtml = /^\s*<!doctype\s+html/i.test(text) || /^\s*<html/i.test(text);
+  if (looksLikeHtml) {
+    throw new Error("API indisponivel no momento. Tente novamente mais tarde.");
+  }
+  let payload: any = {};
+  try {
+    payload = text ? JSON.parse(text) : {};
+  } catch {
+    payload = {};
+  }
   if (!response.ok) {
     throw new Error(payload.error || "Erro na API");
   }
