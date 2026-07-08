@@ -1,121 +1,51 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { CalendarDays, Camera, Check, ChevronsUpDown, Home, Loader2, LogOut, Plus, Sparkles, Trash2, Upload, Users } from "lucide-react";
+import { api, type PropertyPhoto, type PropertyRecord, type ReservationRecord } from "@/lib/api";
+import { Bath, Bed, CalendarDays, Camera, Home, Loader2, LogOut, MapPin, Plus, Save, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
-type DbProperty = Tables<"properties">;
-type DbPhoto = Tables<"property_photos">;
-type DbReservation = Tables<"reservations">;
+const ADMIN_TOKEN_KEY = "pb_admin_token";
 
-function PropertyCombobox({ properties, value, onChange }: { properties: DbProperty[]; value: string; onChange: (id: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const selected = properties.find(p => p.id === value);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between h-10 font-normal">
-          {selected ? selected.title : "Selecione um imóvel..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Buscar imóvel..." />
-          <CommandList>
-            <CommandEmpty>Nenhum imóvel encontrado.</CommandEmpty>
-            <CommandGroup>
-              {properties.map(p => (
-                <CommandItem key={p.id} value={`${p.title} ${p.city} ${p.state}`} onSelect={() => { onChange(p.id); setOpen(false); }}>
-                  <Check className={cn("mr-2 h-4 w-4", value === p.id ? "opacity-100" : "opacity-0")} />
-                  <div className="flex flex-col">
-                    <span>{p.title}</span>
-                    <span className="text-xs text-muted-foreground">{p.city}/{p.state}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-const formatPrice = (price: number, label?: string | null) =>
-  `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
-
-const statusColor: Record<string, string> = {
-  confirmada: "bg-emerald-100 text-emerald-700",
-  pendente: "bg-amber-100 text-amber-700",
-  cancelada: "bg-rose-100 text-rose-700",
-};
-
-function LoginForm({ onLogin }: { onLogin: () => void }) {
-  const { signIn, signUp, configured, configError } = useAuth();
+function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const error = isSignUp ? await signUp(email, password) : await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else if (isSignUp) {
-      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-    } else {
+  async function handleLogin(event: FormEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    try {
+      const { token } = await api.login(email, password);
+      window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+      toast.success("Bem-vindo ao painel administrativo.");
       onLogin();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha no login");
+    } finally {
+      setSubmitting(false);
     }
-  };
+  }
 
   return (
     <section className="mobile-shell flex min-h-screen items-center justify-center py-28">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{isSignUp ? "Criar conta" : "Login administrativo"}</CardTitle>
-          <CardDescription>
-            {isSignUp ? "Crie uma conta para acessar o painel." : "Entre com suas credenciais para acessar o painel."}
-          </CardDescription>
+          <CardTitle className="text-primary">Acesso administrativo</CardTitle>
+          <CardDescription>Informe suas credenciais para gerenciar o painel.</CardDescription>
         </CardHeader>
         <CardContent>
-          {!configured ? (
-            <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-              <p className="font-medium">Backend não configurado</p>
-              <p>{configError}</p>
-            </div>
-          ) : null}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading || !configured}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSignUp ? "Criar conta" : "Entrar"}
-            </Button>
-            <Button type="button" variant="link" className="w-full" onClick={() => setIsSignUp(!isSignUp)}>
-              {isSignUp ? "Já tem conta? Entrar" : "Criar uma conta"}
+          <form onSubmit={handleLogin} className="space-y-3">
+            <Field label="E-mail"><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
+            <Field label="Senha"><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></Field>
+            <Button type="submit" disabled={submitting} className="w-full">
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Entrar
             </Button>
           </form>
         </CardContent>
@@ -124,208 +54,195 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-function AdminPanel() {
-  const { user, loading: authLoading, signOut } = useAuth();
-  const [properties, setProperties] = useState<DbProperty[]>([]);
-  const [photos, setPhotos] = useState<DbPhoto[]>([]);
-  const [reservations, setReservations] = useState<DbReservation[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [propertySearch, setPropertySearch] = useState("");
-  const [reservationFilter, setReservationFilter] = useState<string>("todas");
+const emptyProperty: Partial<PropertyRecord> = {
+  title: "",
+  type: "casa",
+  listing: "aluguel",
+  price: 0,
+  price_label: "/diaria",
+  location: "",
+  city: "",
+  state: "BA",
+  description: "",
+  bedrooms: 1,
+  bathrooms: 1,
+  area: 0,
+  ocean_view: false,
+  featured: false,
+  status: "disponivel",
+  amenities: [],
+  lat: null,
+  lng: null,
+  whatsapp: "",
+  booking_method: "whatsapp",
+  booking_url: "",
+  booking_notes: "",
+  min_nights: 1,
+  max_guests: 2,
+};
 
-  const [propertyForm, setPropertyForm] = useState({
-    title: "", type: "casa" as DbProperty["type"],
-    price: "", city: "", state: "", location: "", description: "",
-    bedrooms: "0", bathrooms: "0", area: "0", whatsapp: "",
-  });
-  const [reservationForm, setReservationForm] = useState({
-    propertyId: "", guestName: "", email: "",
-    checkIn: new Date().toISOString().split("T")[0],
-    checkOut: new Date().toISOString().split("T")[0], total: "",
-  });
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+const emptyReservation: Partial<ReservationRecord> = {
+  property_id: "",
+  guest_name: "",
+  email: "",
+  phone: "",
+  check_in: new Date().toISOString().slice(0, 10),
+  check_out: new Date().toISOString().slice(0, 10),
+  status: "pendente",
+  total: 0,
+  notes: "",
+};
 
-  const fetchAll = useCallback(async () => {
-    setDataLoading(true);
-    const [propsRes, photosRes, resRes] = await Promise.all([
-      supabase.from("properties").select("*").order("created_at", { ascending: false }),
-      supabase.from("property_photos").select("*").order("created_at", { ascending: false }),
-      supabase.from("reservations").select("*").order("created_at", { ascending: false }),
-    ]);
-    if (propsRes.data) setProperties(propsRes.data);
-    if (photosRes.data) setPhotos(photosRes.data);
-    if (resRes.data) setReservations(resRes.data);
-    setDataLoading(false);
+const money = (value: number) => `R$ ${Number(value || 0).toLocaleString("pt-BR")}`;
+
+export default function AdminPanel() {
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  const [properties, setProperties] = useState<PropertyRecord[]>([]);
+  const [photos, setPhotos] = useState<PropertyPhoto[]>([]);
+  const [reservations, setReservations] = useState<ReservationRecord[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [propertyForm, setPropertyForm] = useState<Partial<PropertyRecord>>(emptyProperty);
+  const [reservationForm, setReservationForm] = useState<Partial<ReservationRecord>>(emptyReservation);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  function logout() {
+    window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+    setAuthed(false);
+  }
+
+  useEffect(() => {
+    const token = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+    if (!token) {
+      setAuthed(false);
+      return;
+    }
+    api.getMe()
+      .then(() => setAuthed(true))
+      .catch(() => {
+        window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+        setAuthed(false);
+      });
   }, []);
 
   useEffect(() => {
-    if (user) fetchAll();
-  }, [user, fetchAll]);
+    if (authed) loadAll();
+  }, [authed]);
 
-  useEffect(() => {
-    if (properties.length > 0 && !reservationForm.propertyId) {
-      setReservationForm(prev => ({ ...prev, propertyId: properties[0].id }));
+  const selected = properties.find((property) => property.id === selectedId);
+  const selectedPhotos = photos.filter((photo) => photo.property_id === selectedId);
+
+  const metrics = useMemo(() => ({
+    properties: properties.length,
+    photos: photos.length,
+    reservations: reservations.length,
+    revenue: reservations.filter((item) => item.status === "confirmada").reduce((sum, item) => sum + Number(item.total), 0),
+  }), [properties, photos, reservations]);
+
+  async function loadAll(nextSelectedId?: string) {
+    setLoading(true);
+    try {
+      const [{ properties: propertyRows, photos: photoRows }, { reservations: reservationRows }] = await Promise.all([
+        api.getProperties(),
+        api.getReservations(),
+      ]);
+      setProperties(propertyRows);
+      setPhotos(photoRows);
+      setReservations(reservationRows);
+      const activeId = nextSelectedId || selectedId || propertyRows[0]?.id || "";
+      setSelectedId(activeId);
+      const active = propertyRows.find((property) => property.id === activeId);
+      setPropertyForm(active || emptyProperty);
+      setReservationForm((prev) => ({ ...prev, property_id: prev.property_id || activeId || propertyRows[0]?.id || "" }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao carregar dados");
+    } finally {
+      setLoading(false);
     }
-  }, [properties, reservationForm.propertyId]);
+  }
 
-  const dashboardMetrics = useMemo(() => {
-    const confirmed = reservations.filter(r => r.status === "confirmada");
-    const pending = reservations.filter(r => r.status === "pendente");
-    return {
-      totalProperties: properties.length,
-      totalPhotos: photos.length,
-      confirmedBookings: confirmed.length,
-      pendingBookings: pending.length,
-      monthlyRevenue: confirmed.reduce((sum, r) => sum + Number(r.total), 0),
-      featuredProperties: properties.filter(p => p.featured).length,
-      totalGuests: new Set(reservations.map(r => r.email)).size,
-    };
-  }, [properties, photos, reservations]);
+  function editProperty(property: PropertyRecord) {
+    setSelectedId(property.id);
+    setPropertyForm(property);
+  }
 
-  const propertyNameById = useMemo(
-    () => Object.fromEntries(properties.map(p => [p.id, p.title])),
-    [properties],
-  );
+  function updateForm<K extends keyof PropertyRecord>(key: K, value: PropertyRecord[K]) {
+    setPropertyForm((prev) => ({ ...prev, [key]: value }));
+  }
 
-  const filteredProperties = useMemo(() => {
-    const q = propertySearch.toLowerCase().trim();
-    if (!q) return properties;
-    return properties.filter(p =>
-      `${p.title} ${p.city} ${p.state} ${p.location}`.toLowerCase().includes(q),
-    );
-  }, [properties, propertySearch]);
-
-  const filteredReservations = useMemo(() => {
-    if (reservationFilter === "todas") return reservations;
-    return reservations.filter(r => r.status === reservationFilter);
-  }, [reservations, reservationFilter]);
-
-  // ---- CRUD ----
-  const addProperty = async (e: FormEvent) => {
-    e.preventDefault();
-    const payload: TablesInsert<"properties"> = {
-      title: propertyForm.title,
-      type: propertyForm.type,
-      listing: "aluguel",
-      price: Number(propertyForm.price),
-      city: propertyForm.city,
-      state: propertyForm.state,
-      location: propertyForm.location,
-      description: propertyForm.description,
-      bedrooms: Number(propertyForm.bedrooms),
-      bathrooms: Number(propertyForm.bathrooms),
-      area: Number(propertyForm.area),
-      whatsapp: propertyForm.whatsapp,
-    };
-    const { error } = await supabase.from("properties").insert(payload);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Imóvel cadastrado!");
-    setPropertyForm({ title: "", type: "casa", price: "", city: "", state: "", location: "", description: "", bedrooms: "0", bathrooms: "0", area: "0", whatsapp: "" });
-    fetchAll();
-  };
-
-  const removeProperty = async (id: string) => {
-    const { error } = await supabase.from("properties").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Imóvel removido.");
-    fetchAll();
-  };
-
-  const toggleFeatured = async (p: DbProperty) => {
-    await supabase.from("properties").update({ featured: !p.featured }).eq("id", p.id);
-    fetchAll();
-  };
-
-  const changeStatus = async (id: string, status: DbProperty["status"]) => {
-    await supabase.from("properties").update({ status }).eq("id", id);
-    fetchAll();
-  };
-
-  const updateWhatsapp = async (id: string, whatsapp: string) => {
-    await supabase.from("properties").update({ whatsapp }).eq("id", id);
-    fetchAll();
-  };
-
-  // Photo upload (multiple)
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, propertyId: string) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setUploadingPhoto(true);
-
-    for (const file of Array.from(files)) {
-      const ext = file.name.split(".").pop();
-      const path = `${propertyId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("property-photos")
-        .upload(path, file);
-
-      if (uploadError) {
-        toast.error(`Erro no upload: ${uploadError.message}`);
-        continue;
+  async function saveProperty(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      const payload = {
+        ...propertyForm,
+        amenities: typeof propertyForm.amenities === "string"
+          ? String(propertyForm.amenities).split(",").map((item) => item.trim()).filter(Boolean)
+          : propertyForm.amenities,
+      };
+      if (selected?.id) {
+        await api.updateProperty(selected.id, payload);
+        toast.success("Propriedade atualizada.");
+        await loadAll(selected.id);
+      } else {
+        const { id } = await api.createProperty(payload);
+        toast.success("Propriedade criada.");
+        await loadAll(id);
       }
-
-      const { data: urlData } = supabase.storage.from("property-photos").getPublicUrl(path);
-
-      await supabase.from("property_photos").insert({
-        property_id: propertyId,
-        url: urlData.publicUrl,
-        caption: file.name.replace(/\.[^.]+$/, ""),
-      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
     }
+  }
 
-    toast.success("Fotos enviadas!");
-    setUploadingPhoto(false);
-    fetchAll();
-  };
+  async function deleteProperty(id: string) {
+    if (!confirm("Excluir esta propriedade e sua galeria?")) return;
+    await api.deleteProperty(id);
+    toast.success("Propriedade excluida.");
+    await loadAll("");
+  }
 
-  const togglePhotoPublished = async (photo: DbPhoto) => {
-    await supabase.from("property_photos").update({ published: !photo.published }).eq("id", photo.id);
-    fetchAll();
-  };
-
-  const makePhotoCover = async (photo: DbPhoto) => {
-    await supabase.from("property_photos").update({ cover: false }).eq("property_id", photo.property_id);
-    await supabase.from("property_photos").update({ cover: true }).eq("id", photo.id);
-    fetchAll();
-  };
-
-  const deletePhoto = async (photo: DbPhoto) => {
-    const urlParts = photo.url.split("/property-photos/");
-    if (urlParts[1]) {
-      await supabase.storage.from("property-photos").remove([urlParts[1]]);
+  async function uploadPhotos(files: FileList | null) {
+    if (!selectedId || !files?.length) return;
+    setUploading(true);
+    try {
+      await api.uploadPhotos(selectedId, files);
+      toast.success("Fotos enviadas.");
+      await loadAll(selectedId);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro no upload");
+    } finally {
+      setUploading(false);
     }
-    await supabase.from("property_photos").delete().eq("id", photo.id);
+  }
+
+  async function updatePhoto(photo: PropertyPhoto, patch: Partial<PropertyPhoto>) {
+    await api.updatePhoto(photo.id, { ...photo, ...patch });
+    await loadAll(selectedId);
+  }
+
+  async function removePhoto(photo: PropertyPhoto) {
+    await api.deletePhoto(photo.id);
     toast.success("Foto removida.");
-    fetchAll();
-  };
+    await loadAll(selectedId);
+  }
 
-  // Reservations
-  const addReservation = async (e: FormEvent) => {
-    e.preventDefault();
-    const payload: TablesInsert<"reservations"> = {
-      property_id: reservationForm.propertyId,
-      guest_name: reservationForm.guestName,
-      email: reservationForm.email,
-      check_in: reservationForm.checkIn,
-      check_out: reservationForm.checkOut,
-      total: Number(reservationForm.total),
-    };
-    const { error } = await supabase.from("reservations").insert(payload);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Reserva criada!");
-    setReservationForm({ propertyId: properties[0]?.id ?? "", guestName: "", email: "", checkIn: new Date().toISOString().split("T")[0], checkOut: new Date().toISOString().split("T")[0], total: "" });
-    fetchAll();
-  };
+  async function saveReservation(event: FormEvent) {
+    event.preventDefault();
+    await api.createReservation(reservationForm);
+    toast.success("Reserva criada.");
+    setReservationForm({ ...emptyReservation, property_id: selectedId || properties[0]?.id || "" });
+    await loadAll(selectedId);
+  }
 
-  const cycleReservationStatus = async (r: DbReservation) => {
-    const next: Record<string, DbReservation["status"]> = { pendente: "confirmada", confirmada: "cancelada", cancelada: "pendente" };
-    await supabase.from("reservations").update({ status: next[r.status] }).eq("id", r.id);
-    fetchAll();
-  };
+  async function updateReservation(reservation: ReservationRecord, status: ReservationRecord["status"]) {
+    await api.updateReservation(reservation.id, { status, notes: reservation.notes });
+    await loadAll(selectedId);
+  }
 
-  // Auth gate
-  if (authLoading) {
+  if (authed === null || (authed && loading)) {
     return (
       <section className="mobile-shell flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -333,371 +250,276 @@ function AdminPanel() {
     );
   }
 
-  if (!user) {
-    return <LoginForm onLogin={fetchAll} />;
+  if (!authed) {
+    return <AdminLogin onLogin={() => setAuthed(true)} />;
   }
 
   return (
     <section className="mobile-shell py-28 md:py-32">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-3">
-          <Badge className="w-fit bg-primary/10 text-primary">Painel Administrativo</Badge>
-          <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Gestão de Propriedades & Reservas</h1>
-          <p className="max-w-3xl text-muted-foreground">
-            Logado como <strong>{user.email}</strong>
-          </p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Badge className="mb-3 bg-primary/10 text-primary">Admin Paradise Beach</Badge>
+            <Button variant="outline" size="sm" onClick={logout} className="mb-3">
+              <LogOut className="mr-2 h-4 w-4" /> Sair
+            </Button>
+          </div>
+          <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Painel de propriedades</h1>
+          <p className="mt-2 text-muted-foreground">Cadastro, galeria, localizacao, reservas e metodos de reserva.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={signOut} className="shrink-0 gap-2">
-          <LogOut className="h-4 w-4" />Sair
+        <Button onClick={() => { setSelectedId(""); setPropertyForm(emptyProperty); }}>
+          <Plus className="mr-2 h-4 w-4" /> Nova propriedade
         </Button>
       </div>
+      <div className="mt-8 grid gap-4 md:grid-cols-4">
+        <Metric icon={<Home />} label="Propriedades" value={metrics.properties} />
+        <Metric icon={<Camera />} label="Fotos" value={metrics.photos} />
+        <Metric icon={<CalendarDays />} label="Reservas" value={metrics.reservations} />
+        <Metric icon={<Save />} label="Receita confirmada" value={money(metrics.revenue)} />
+      </div>
 
-      {dataLoading ? (
-        <div className="mt-16 flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Imóveis cadastrados</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><Home className="h-6 w-6 text-primary" />{dashboardMetrics.totalProperties}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Fotos no sistema</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><Camera className="h-6 w-6 text-primary" />{dashboardMetrics.totalPhotos}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Reservas confirmadas</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><CalendarDays className="h-6 w-6 text-primary" />{dashboardMetrics.confirmedBookings}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Hóspedes únicos</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-3xl"><Users className="h-6 w-6 text-primary" />{dashboardMetrics.totalGuests}</CardTitle>
-              </CardHeader>
-            </Card>
-          </div>
+      <Tabs defaultValue="details" className="mt-8">
+        <TabsList className="h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
+          <TabsTrigger value="details">Detalhes</TabsTrigger>
+          <TabsTrigger value="gallery">Galeria</TabsTrigger>
+          <TabsTrigger value="reservations">Reservas</TabsTrigger>
+          <TabsTrigger value="list">Lista</TabsTrigger>
+        </TabsList>
 
-          <Tabs defaultValue="properties" className="mt-8 space-y-4">
-            <TabsList className="h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0">
-              <TabsTrigger value="properties">Propriedades</TabsTrigger>
-              <TabsTrigger value="photos">Fotos</TabsTrigger>
-              <TabsTrigger value="reservations">Reservas</TabsTrigger>
-              <TabsTrigger value="crm">CRM & receita</TabsTrigger>
-            </TabsList>
+        <TabsContent value="details" className="mt-5">
+          <Card>
+            <CardHeader>
+              <CardTitle>{selected ? "Editar propriedade" : "Nova propriedade"}</CardTitle>
+              <CardDescription>Preencha dados comerciais, localizacao, comodidades e metodo de reserva.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={saveProperty} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <Field label="Titulo" className="md:col-span-2">
+                  <Input value={propertyForm.title || ""} onChange={(e) => updateForm("title", e.target.value)} required />
+                </Field>
+                <Field label="Tipo">
+                  <Select value={propertyForm.type} onChange={(value) => updateForm("type", value as PropertyRecord["type"])} options={["casa", "villa", "apartamento", "terreno"]} />
+                </Field>
+                <Field label="Status">
+                  <Select value={propertyForm.status} onChange={(value) => updateForm("status", value as PropertyRecord["status"])} options={["disponivel", "alugado", "vendido"]} />
+                </Field>
+                <Field label="Preco">
+                  <Input type="number" value={propertyForm.price ?? 0} onChange={(e) => updateForm("price", Number(e.target.value))} />
+                </Field>
+                <Field label="Rotulo do preco">
+                  <Input value={propertyForm.price_label || ""} onChange={(e) => updateForm("price_label", e.target.value)} placeholder="/diaria" />
+                </Field>
+                <Field label="Quartos">
+                  <Input type="number" value={propertyForm.bedrooms ?? 0} onChange={(e) => updateForm("bedrooms", Number(e.target.value))} />
+                </Field>
+                <Field label="Banheiros">
+                  <Input type="number" value={propertyForm.bathrooms ?? 0} onChange={(e) => updateForm("bathrooms", Number(e.target.value))} />
+                </Field>
+                <Field label="Area m2">
+                  <Input type="number" value={propertyForm.area ?? 0} onChange={(e) => updateForm("area", Number(e.target.value))} />
+                </Field>
+                <Field label="Max hospedes">
+                  <Input type="number" value={propertyForm.max_guests ?? 1} onChange={(e) => updateForm("max_guests", Number(e.target.value))} />
+                </Field>
+                <Field label="Min noites">
+                  <Input type="number" value={propertyForm.min_nights ?? 1} onChange={(e) => updateForm("min_nights", Number(e.target.value))} />
+                </Field>
+                <Field label="Cidade">
+                  <Input value={propertyForm.city || ""} onChange={(e) => updateForm("city", e.target.value)} />
+                </Field>
+                <Field label="UF">
+                  <Input value={propertyForm.state || ""} maxLength={2} onChange={(e) => updateForm("state", e.target.value.toUpperCase())} />
+                </Field>
+                <Field label="Bairro/regiao" className="md:col-span-2">
+                  <Input value={propertyForm.location || ""} onChange={(e) => updateForm("location", e.target.value)} />
+                </Field>
+                <Field label="Latitude">
+                  <Input value={propertyForm.lat ?? ""} onChange={(e) => updateForm("lat", e.target.value ? Number(e.target.value) : null)} />
+                </Field>
+                <Field label="Longitude">
+                  <Input value={propertyForm.lng ?? ""} onChange={(e) => updateForm("lng", e.target.value ? Number(e.target.value) : null)} />
+                </Field>
+                <Field label="WhatsApp">
+                  <Input value={propertyForm.whatsapp || ""} onChange={(e) => updateForm("whatsapp", e.target.value)} placeholder="5573999990000" />
+                </Field>
+                <Field label="Metodo de reserva">
+                  <Select value={propertyForm.booking_method} onChange={(value) => updateForm("booking_method", value as PropertyRecord["booking_method"])} options={["whatsapp", "email", "phone", "manual", "external"]} />
+                </Field>
+                <Field label="URL de reserva" className="md:col-span-2">
+                  <Input value={propertyForm.booking_url || ""} onChange={(e) => updateForm("booking_url", e.target.value)} placeholder="Airbnb, Booking, formulario externo..." />
+                </Field>
+                <Field label="Comodidades" className="md:col-span-2">
+                  <Input
+                    value={(propertyForm.amenities || []).join(", ")}
+                    onChange={(e) => updateForm("amenities", e.target.value.split(",").map((item) => item.trim()).filter(Boolean))}
+                    placeholder="Piscina, Wi-Fi, Ar condicionado"
+                  />
+                </Field>
+                <Field label="Descricao" className="md:col-span-2 xl:col-span-4">
+                  <Textarea rows={5} value={propertyForm.description || ""} onChange={(e) => updateForm("description", e.target.value)} />
+                </Field>
+                <Field label="Notas de reserva" className="md:col-span-2 xl:col-span-4">
+                  <Textarea rows={3} value={propertyForm.booking_notes || ""} onChange={(e) => updateForm("booking_notes", e.target.value)} />
+                </Field>
+                <div className="flex flex-wrap gap-3 md:col-span-2 xl:col-span-4">
+                  <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(propertyForm.featured)} onChange={(e) => updateForm("featured", e.target.checked)} /> Destaque</label>
+                  <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(propertyForm.ocean_view)} onChange={(e) => updateForm("ocean_view", e.target.checked)} /> Vista para o mar</label>
+                </div>
+                <div className="md:col-span-2 xl:col-span-4">
+                  <Button disabled={saving}>
+                    {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Salvar propriedade
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            {/* ---- PROPRIEDADES ---- */}
-            <TabsContent value="properties" className="space-y-5">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Novo imóvel</CardTitle>
-                  <CardDescription>Cadastro rápido. Após criar, faça upload das fotos.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={addProperty} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <div className="space-y-1.5 xl:col-span-2">
-                      <Label htmlFor="title">Título</Label>
-                      <Input id="title" value={propertyForm.title} onChange={(e) => setPropertyForm(prev => ({ ...prev, title: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="price">Preço / diária</Label>
-                      <Input id="price" type="number" min={0} value={propertyForm.price} onChange={(e) => setPropertyForm(prev => ({ ...prev, price: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="city">Cidade</Label>
-                      <Input id="city" value={propertyForm.city} onChange={(e) => setPropertyForm(prev => ({ ...prev, city: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="state">UF</Label>
-                      <Input id="state" value={propertyForm.state} onChange={(e) => setPropertyForm(prev => ({ ...prev, state: e.target.value.toUpperCase() }))} maxLength={2} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="location">Região</Label>
-                      <Input id="location" value={propertyForm.location} onChange={(e) => setPropertyForm(prev => ({ ...prev, location: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="type">Tipo</Label>
-                      <select id="type" value={propertyForm.type} onChange={(e) => setPropertyForm(prev => ({ ...prev, type: e.target.value as DbProperty["type"] }))} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
-                        <option value="casa">Casa</option>
-                        <option value="villa">Villa</option>
-                        <option value="apartamento">Apartamento</option>
-                        <option value="terreno">Terreno</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="bedrooms">Quartos</Label>
-                      <Input id="bedrooms" type="number" min={0} value={propertyForm.bedrooms} onChange={(e) => setPropertyForm(prev => ({ ...prev, bedrooms: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="bathrooms">Banheiros</Label>
-                      <Input id="bathrooms" type="number" min={0} value={propertyForm.bathrooms} onChange={(e) => setPropertyForm(prev => ({ ...prev, bathrooms: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="area">Área (m²)</Label>
-                      <Input id="area" type="number" min={0} value={propertyForm.area} onChange={(e) => setPropertyForm(prev => ({ ...prev, area: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="whatsapp">WhatsApp</Label>
-                      <Input id="whatsapp" placeholder="5573999990000" value={propertyForm.whatsapp} onChange={(e) => setPropertyForm(prev => ({ ...prev, whatsapp: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5 md:col-span-2 xl:col-span-3">
-                      <Label htmlFor="description">Descrição</Label>
-                      <Textarea id="description" value={propertyForm.description} onChange={(e) => setPropertyForm(prev => ({ ...prev, description: e.target.value }))} rows={3} required />
-                    </div>
-                    <div className="md:col-span-2 xl:col-span-3">
-                      <Button type="submit" className="gap-2"><Plus className="h-4 w-4" />Cadastrar imóvel</Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Catálogo de imóveis</CardTitle>
-                  <CardDescription>Busque por título, cidade ou localização.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Input placeholder="Buscar imóvel..." value={propertySearch} onChange={(e) => setPropertySearch(e.target.value)} />
-                  {filteredProperties.length === 0 && (
-                    <p className="py-8 text-center text-muted-foreground">Nenhum imóvel cadastrado.</p>
-                  )}
-                  {filteredProperties.map((property) => {
-                    const propPhotos = photos.filter(ph => ph.property_id === property.id);
-                    return (
-                      <div key={property.id} className="space-y-3 rounded-lg border p-4">
-                        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                          <div>
-                            <p className="font-semibold">{property.title}</p>
-                            <p className="text-sm text-muted-foreground">{property.city}/{property.state} • {formatPrice(property.price, property.price_label)}</p>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button variant={property.featured ? "secondary" : "outline"} size="sm" onClick={() => toggleFeatured(property)}>
-                              <Sparkles className="mr-2 h-4 w-4" />
-                              {property.featured ? "Destaque" : "Destacar"}
-                            </Button>
-                            <Button variant="destructive" size="sm" className="gap-2" onClick={() => removeProperty(property.id)}>
-                              <Trash2 className="h-4 w-4" />Excluir
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* WhatsApp inline */}
-                        <div className="flex items-center gap-2">
-                          <Label className="text-sm shrink-0">WhatsApp:</Label>
-                          <Input
-                            className="h-8 max-w-[200px]"
-                            placeholder="5573999990000"
-                            defaultValue={property.whatsapp ?? ""}
-                            onBlur={(e) => {
-                              if (e.target.value !== (property.whatsapp ?? "")) {
-                                updateWhatsapp(property.id, e.target.value);
-                              }
-                            }}
-                          />
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 text-sm">
-                          <Label>Status:</Label>
-                          <select className="h-8 rounded-md border border-input bg-background px-2" value={property.status} onChange={(e) => changeStatus(property.id, e.target.value as DbProperty["status"])}>
-                            <option value="disponivel">Disponível</option>
-                            <option value="alugado">Alugado</option>
-                          </select>
-                          <Badge className="bg-muted text-foreground">{property.type}</Badge>
-
-                          <label className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border border-input px-3 py-1.5 text-sm transition hover:bg-accent">
-                            <Upload className="h-4 w-4" />
-                            <span>{uploadingPhoto ? "Enviando..." : "Upload fotos"}</span>
-                            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handlePhotoUpload(e, property.id)} disabled={uploadingPhoto} />
-                          </label>
-                        </div>
-
-                        {/* Inline photo gallery */}
-                        {propPhotos.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            {propPhotos.map((photo) => (
-                              <div key={photo.id} className="relative group">
-                                <img src={photo.url} alt={photo.caption} className="h-16 w-20 rounded-md object-cover" />
-                                {photo.cover && <span className="absolute top-0 left-0 bg-primary text-primary-foreground text-[10px] px-1 rounded-br">Capa</span>}
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-1">
-                                  <button onClick={() => makePhotoCover(photo)} className="text-white text-[10px] bg-primary/80 px-1 rounded">Capa</button>
-                                  <button onClick={() => deletePhoto(photo)} className="text-white text-[10px] bg-destructive/80 px-1 rounded">×</button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* ---- FOTOS ---- */}
-            <TabsContent value="photos" className="space-y-5">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Biblioteca de fotos ({photos.length})</CardTitle>
-                  <CardDescription>Controle publicação e escolha a capa principal de cada imóvel.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-3">
-                  {photos.length === 0 && (
-                    <p className="py-8 text-center text-muted-foreground">Nenhuma foto. Faça upload pela aba Propriedades.</p>
-                  )}
-                  {photos.map((photo) => (
-                    <div key={photo.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center">
-                      <img src={photo.url} alt={photo.caption} className="h-20 w-28 shrink-0 rounded-md object-cover" />
-                      <div className="flex-1">
-                        <p className="font-medium">{photo.caption}</p>
-                        <p className="text-sm text-muted-foreground">{propertyNameById[photo.property_id] ?? "Imóvel removido"}</p>
-                      </div>
+        <TabsContent value="gallery" className="mt-5">
+          <Card>
+            <CardHeader>
+              <CardTitle>Galeria da propriedade</CardTitle>
+              <CardDescription>{selected ? selected.title : "Selecione uma propriedade na lista."}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <PropertyPicker properties={properties} value={selectedId} onChange={(id) => editProperty(properties.find((item) => item.id === id)!)} />
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+                  {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                  Enviar fotos
+                  <input className="hidden" type="file" accept="image/*" multiple onChange={(e) => uploadPhotos(e.target.files)} />
+                </label>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {selectedPhotos.map((photo) => (
+                  <Card key={photo.id} className="overflow-hidden">
+                    <img src={photo.url} alt={photo.caption} className="h-48 w-full object-cover" />
+                    <CardContent className="space-y-3 p-4">
+                      <Input value={photo.caption} onChange={(e) => updatePhoto(photo, { caption: e.target.value })} />
                       <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant={photo.cover ? "secondary" : "outline"} onClick={() => makePhotoCover(photo)}>
-                          {photo.cover ? "Capa ✓" : "Definir capa"}
-                        </Button>
-                        <Button size="sm" variant={photo.published ? "secondary" : "outline"} onClick={() => togglePhotoPublished(photo)}>
-                          {photo.published ? "Publicado" : "Oculto"}
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => deletePhoto(photo)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <Button size="sm" variant={photo.cover ? "secondary" : "outline"} onClick={() => updatePhoto(photo, { cover: true })}>Capa</Button>
+                        <Button size="sm" variant={photo.published ? "secondary" : "outline"} onClick={() => updatePhoto(photo, { published: !photo.published })}>{photo.published ? "Publicada" : "Oculta"}</Button>
+                        <Button size="sm" variant="destructive" onClick={() => removePhoto(photo)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            {/* ---- RESERVAS ---- */}
-            <TabsContent value="reservations" className="space-y-5">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Nova reserva</CardTitle>
-                  <CardDescription>Crie reservas manuais e acompanhe o status.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={addReservation} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="space-y-1.5">
-                      <Label>Imóvel</Label>
-                      <PropertyCombobox properties={properties} value={reservationForm.propertyId} onChange={(id) => setReservationForm(prev => ({ ...prev, propertyId: id }))} />
+        <TabsContent value="reservations" className="mt-5 grid gap-5 xl:grid-cols-[420px_1fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle>Nova reserva</CardTitle>
+              <CardDescription>Registro manual de reservas e bloqueios.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={saveReservation} className="space-y-3">
+                <Field label="Propriedade"><PropertyPicker properties={properties} value={reservationForm.property_id || ""} onChange={(id) => setReservationForm((prev) => ({ ...prev, property_id: id }))} /></Field>
+                <Field label="Nome"><Input value={reservationForm.guest_name || ""} onChange={(e) => setReservationForm((prev) => ({ ...prev, guest_name: e.target.value }))} required /></Field>
+                <Field label="E-mail"><Input type="email" value={reservationForm.email || ""} onChange={(e) => setReservationForm((prev) => ({ ...prev, email: e.target.value }))} required /></Field>
+                <Field label="Telefone"><Input value={reservationForm.phone || ""} onChange={(e) => setReservationForm((prev) => ({ ...prev, phone: e.target.value }))} /></Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Check-in"><Input type="date" value={reservationForm.check_in || ""} onChange={(e) => setReservationForm((prev) => ({ ...prev, check_in: e.target.value }))} /></Field>
+                  <Field label="Check-out"><Input type="date" value={reservationForm.check_out || ""} onChange={(e) => setReservationForm((prev) => ({ ...prev, check_out: e.target.value }))} /></Field>
+                </div>
+                <Field label="Total"><Input type="number" value={reservationForm.total ?? 0} onChange={(e) => setReservationForm((prev) => ({ ...prev, total: Number(e.target.value) }))} /></Field>
+                <Field label="Notas"><Textarea value={reservationForm.notes || ""} onChange={(e) => setReservationForm((prev) => ({ ...prev, notes: e.target.value }))} /></Field>
+                <Button><Plus className="mr-2 h-4 w-4" />Criar reserva</Button>
+              </form>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Reservas</CardTitle>
+              <CardDescription>Atualize status conforme atendimento.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {reservations.map((reservation) => (
+                <div key={reservation.id} className="rounded-lg border p-4">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="font-semibold">{reservation.guest_name}</p>
+                      <p className="text-sm text-muted-foreground">{properties.find((item) => item.id === reservation.property_id)?.title} - {reservation.check_in} a {reservation.check_out}</p>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="guestName">Hóspede</Label>
-                      <Input id="guestName" value={reservationForm.guestName} onChange={(e) => setReservationForm(prev => ({ ...prev, guestName: e.target.value }))} required />
+                    <div className="flex gap-2">
+                      <Select value={reservation.status} onChange={(value) => updateReservation(reservation, value as ReservationRecord["status"])} options={["pendente", "confirmada", "cancelada"]} />
+                      <Button variant="destructive" size="sm" onClick={async () => { await api.deleteReservation(reservation.id); await loadAll(selectedId); }}><Trash2 className="h-4 w-4" /></Button>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="guestEmail">E-mail</Label>
-                      <Input id="guestEmail" type="email" value={reservationForm.email} onChange={(e) => setReservationForm(prev => ({ ...prev, email: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="checkIn">Check-in</Label>
-                      <Input id="checkIn" type="date" value={reservationForm.checkIn} onChange={(e) => setReservationForm(prev => ({ ...prev, checkIn: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="checkOut">Check-out</Label>
-                      <Input id="checkOut" type="date" value={reservationForm.checkOut} onChange={(e) => setReservationForm(prev => ({ ...prev, checkOut: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="total">Valor total</Label>
-                      <Input id="total" type="number" min={0} value={reservationForm.total} onChange={(e) => setReservationForm(prev => ({ ...prev, total: e.target.value }))} required />
-                    </div>
-                    <div className="self-end">
-                      <Button type="submit">Criar reserva</Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+                  </div>
+                  <p className="mt-2 text-sm">{reservation.email} {reservation.phone ? `- ${reservation.phone}` : ""} - {money(Number(reservation.total))}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reservas ({filteredReservations.length})</CardTitle>
-                  <CardDescription>Filtre por status para priorizar atendimento.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    {(["todas", "pendente", "confirmada", "cancelada"] as const).map(status => (
-                      <Button key={status} size="sm" variant={reservationFilter === status ? "secondary" : "outline"} onClick={() => setReservationFilter(status)}>
-                        {status}
-                      </Button>
-                    ))}
+        <TabsContent value="list" className="mt-5">
+          <Card>
+            <CardHeader>
+              <CardTitle>Propriedades cadastradas</CardTitle>
+              <CardDescription>Clique para editar detalhes ou excluir.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {properties.map((property) => (
+                <div key={property.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
+                  <button className="text-left" onClick={() => editProperty(property)}>
+                    <p className="font-semibold">{property.title}</p>
+                    <p className="text-sm text-muted-foreground"><MapPin className="mr-1 inline h-3 w-3" />{property.location}, {property.city}/{property.state}</p>
+                    <p className="mt-1 text-sm"><Bed className="mr-1 inline h-3 w-3" />{property.bedrooms} <Bath className="mx-1 inline h-3 w-3" />{property.bathrooms} - {money(property.price)}{property.price_label}</p>
+                  </button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => editProperty(property)}>Editar</Button>
+                    <Button variant="destructive" onClick={() => deleteProperty(property.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
-
-                  {filteredReservations.length === 0 && (
-                    <p className="py-8 text-center text-muted-foreground">Nenhuma reserva encontrada.</p>
-                  )}
-
-                  {filteredReservations.map(reservation => (
-                    <Dialog key={reservation.id}>
-                      <DialogTrigger asChild>
-                        <button className="w-full rounded-lg border p-4 text-left transition hover:border-primary/50">
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <p className="font-semibold">{reservation.guest_name}</p>
-                            <Badge className={statusColor[reservation.status]}>{reservation.status}</Badge>
-                          </div>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {propertyNameById[reservation.property_id]} • {reservation.check_in} a {reservation.check_out} • {formatPrice(Number(reservation.total))}
-                          </p>
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Reserva</DialogTitle>
-                          <DialogDescription>Atualize o status em 1 clique.</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-2 text-sm">
-                          <p><strong>Imóvel:</strong> {propertyNameById[reservation.property_id]}</p>
-                          <p><strong>Hóspede:</strong> {reservation.guest_name}</p>
-                          <p><strong>E-mail:</strong> {reservation.email}</p>
-                          <p><strong>Período:</strong> {reservation.check_in} até {reservation.check_out}</p>
-                          <p><strong>Total:</strong> {formatPrice(Number(reservation.total))}</p>
-                        </div>
-                        <Button onClick={() => cycleReservationStatus(reservation)}>Alterar status (atual: {reservation.status})</Button>
-                      </DialogContent>
-                    </Dialog>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* ---- CRM ---- */}
-            <TabsContent value="crm">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" />KPI comercial</CardTitle>
-                  <CardDescription>Resumo executivo.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-lg border p-4">
-                    <p className="text-sm text-muted-foreground">Imóveis destaque</p>
-                    <p className="text-2xl font-bold text-primary">{dashboardMetrics.featuredProperties}</p>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <p className="text-sm text-muted-foreground">Reservas pendentes</p>
-                    <p className="text-2xl font-bold text-primary">{dashboardMetrics.pendingBookings}</p>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <p className="text-sm text-muted-foreground">Receita confirmada</p>
-                    <p className="text-2xl font-bold text-primary">{formatPrice(dashboardMetrics.monthlyRevenue)}</p>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <p className="text-sm text-muted-foreground">Taxa de aprovação</p>
-                    <p className="text-2xl font-bold text-primary">{reservations.length ? Math.round((dashboardMetrics.confirmedBookings / reservations.length) * 100) : 0}%</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </>
-      )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }
 
-export default AdminPanel;
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="flex items-center gap-2 text-2xl text-primary">
+          <span className="[&_svg]:h-5 [&_svg]:w-5">{icon}</span>{value}
+        </CardTitle>
+      </CardHeader>
+    </Card>
+  );
+}
+
+function Field({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
+  return (
+    <div className={className}>
+      <Label className="mb-1.5 block">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function Select({ value, options, onChange }: { value?: string; options: string[]; onChange: (value: string) => void }) {
+  return (
+    <select value={value || ""} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+      {options.map((option) => <option key={option} value={option}>{option}</option>)}
+    </select>
+  );
+}
+
+function PropertyPicker({ properties, value, onChange }: { properties: PropertyRecord[]; value: string; onChange: (id: string) => void }) {
+  return (
+    <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+      <option value="">Selecione</option>
+      {properties.map((property) => <option key={property.id} value={property.id}>{property.title}</option>)}
+    </select>
+  );
+}

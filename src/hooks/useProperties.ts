@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase, SUPABASE_CONFIGURED } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { api, type PropertyPhoto, type PropertyRecord } from "@/lib/api";
 
-export type DbProperty = Tables<"properties">;
-export type DbPhoto = Tables<"property_photos">;
+export type DbProperty = PropertyRecord;
+export type DbPhoto = PropertyPhoto;
 
 export interface Property {
   id: string;
@@ -72,21 +71,16 @@ export function useProperties() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!SUPABASE_CONFIGURED) {
-      setLoading(false);
-      return;
-    }
-
     async function fetch() {
-      const [{ data: props }, { data: photos }] = await Promise.all([
-        supabase.from("properties").select("*").order("created_at", { ascending: false }),
-        supabase.from("property_photos").select("*"),
-      ]);
-
-      if (props) {
-        setProperties(props.map((p) => mapDbToProperty(p, photos ?? [])));
+      try {
+        const { properties: props, photos } = await api.getProperties();
+        setProperties(props.map((p) => mapDbToProperty(p, photos)));
+      } catch (error) {
+        console.error(error);
+        setProperties([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     fetch();
@@ -100,21 +94,21 @@ export function useProperty(id: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!SUPABASE_CONFIGURED || !id) {
+    if (!id) {
       setLoading(false);
       return;
     }
 
     async function fetch() {
-      const [{ data: prop }, { data: photos }] = await Promise.all([
-        supabase.from("properties").select("*").eq("id", id!).single(),
-        supabase.from("property_photos").select("*").eq("property_id", id!),
-      ]);
-
-      if (prop) {
-        setProperty(mapDbToProperty(prop, photos ?? []));
+      try {
+        const { property: prop, photos } = await api.getProperty(id!);
+        setProperty(mapDbToProperty(prop, photos));
+      } catch (error) {
+        console.error(error);
+        setProperty(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     fetch();
