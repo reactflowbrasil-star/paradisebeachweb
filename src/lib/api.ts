@@ -92,7 +92,7 @@ export const api = {
   deleteProperty: (id: string) => request<{ ok: boolean }>(`/api/properties/${id}`, { method: "DELETE" }),
   uploadPhotos: (propertyId: string, files: FileList | File[]) => {
     const formData = new FormData();
-    Array.from(files).forEach((file) => formData.append("photos", file));
+    Array.from(files).forEach((file) => formData.append("photos[]", file));
     return request<{ photos: PropertyPhoto[] }>(`/api/properties/${propertyId}/photos`, { method: "POST", body: formData });
   },
   updatePhoto: (id: string, data: Partial<PropertyPhoto>) => request<{ ok: boolean }>(`/api/photos/${id}`, { method: "PUT", body: JSON.stringify(data) }),
