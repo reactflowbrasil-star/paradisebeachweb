@@ -65,6 +65,10 @@ export default function PropertyMap({ property }: PropertyMapProps) {
   const token = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
 
+  const lat = Number(property.lat);
+  const lng = Number(property.lng);
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+
   const tileUrl = token
     ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${token}`
     : "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -72,6 +76,20 @@ export default function PropertyMap({ property }: PropertyMapProps) {
   const attribution = token
     ? '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+  if (!hasCoords) {
+    return (
+      <div className="rounded-lg overflow-hidden bg-muted">
+        <div className="flex items-center gap-2 text-sm text-foreground/80 border-b border-border bg-card px-4 py-3">
+          <MapPin size={16} />
+          <span>{property.location}, {property.city} — {property.state}</span>
+        </div>
+        <div className="h-[28rem] flex items-center justify-center text-sm text-foreground/60">
+          Localização precisa não informada.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg overflow-hidden bg-muted">
@@ -81,7 +99,7 @@ export default function PropertyMap({ property }: PropertyMapProps) {
       </div>
       <div className="h-[28rem]">
         <MapContainer
-          center={[property.lat, property.lng]}
+          center={[lat, lng]}
           zoom={12}
           scrollWheelZoom={false}
           className="h-full w-full"
@@ -93,7 +111,7 @@ export default function PropertyMap({ property }: PropertyMapProps) {
             tileSize={token ? 512 : undefined}
             zoomOffset={token ? -1 : undefined}
           />
-          <Marker position={[property.lat, property.lng]}>
+          <Marker position={[lat, lng]}>
             <Popup>{property.title}</Popup>
           </Marker>
           {userPosition ? (
