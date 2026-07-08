@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, MapPin, TrendingUp, Gem, Star, ArrowRight } from "lucide-react";
+import { Shield, MapPin, TrendingUp, Gem, Star, ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
+import { useProperties } from "@/hooks/useProperties";
 import PropertyCard from "@/components/PropertyCard";
 import SectionTitle from "@/components/SectionTitle";
-import { Loader2 } from "lucide-react";
 
 const heroSlides = [
   { src: "/hero/001.jpg", alt: "Villa de luxo à beira-mar com piscina infinita ao pôr do sol" },
