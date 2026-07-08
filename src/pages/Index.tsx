@@ -3,22 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, MapPin, TrendingUp, Gem, Star, ArrowRight } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
-import heroImg from "@/assets/hero-beach.jpg";
-import sunsetImg from "@/assets/beach-sunset.jpg";
-import prop1 from "@/assets/property-1.jpg";
-import prop2 from "@/assets/property-2.jpg";
-import prop3 from "@/assets/property-3.jpg";
-import { useProperties } from "@/hooks/useProperties";
 import PropertyCard from "@/components/PropertyCard";
 import SectionTitle from "@/components/SectionTitle";
 import { Loader2 } from "lucide-react";
 
 const heroSlides = [
-  { src: heroImg, alt: "Villa de luxo à beira-mar com piscina infinita ao pôr do sol" },
-  { src: sunsetImg, alt: "Pôr do sol deslumbrante na praia paradisíaca" },
-  { src: prop1, alt: "Propriedade de luxo com vista para o mar" },
-  { src: prop2, alt: "Casa premium à beira-mar" },
-  { src: prop3, alt: "Imóvel exclusivo no litoral" },
+  { src: "/hero/001.jpg", alt: "Villa de luxo à beira-mar com piscina infinita ao pôr do sol" },
+  { src: "/hero/02.webp", alt: "Praia paradisíaca com coqueiros" },
+  { src: "/hero/images-1.jpg", alt: "Propriedade de luxo com vista para o mar" },
+  { src: "/hero/images.jpg", alt: "Imóvel exclusivo no litoral" },
 ];
 
 const benefits = [
@@ -56,7 +49,7 @@ export default function Index() {
         <meta name="keywords" content="imóveis beira-mar, villas luxo, casas praia, aluguel temporada" />
         <meta property="og:title" content="Paradise Beach - Imóveis de Luxo à Beira-Mar" />
         <meta property="og:description" content="Viva o paraíso: imóveis premium à beira-mar para aluguel." />
-        <meta property="og:image" content={heroImg} />
+        <meta property="og:image" content="/hero/001.jpg" />
         <meta property="og:url" content="https://paradisebeach.com" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href="https://paradisebeach.com" />
@@ -179,7 +172,7 @@ export default function Index() {
 
       {/* Newsletter */}
       <section className="relative overflow-hidden py-16 sm:py-20 md:py-24">
-        <img src={sunsetImg} alt="Pôr do sol na praia" className="absolute inset-0 h-full w-full object-cover" loading="lazy" width={1920} height={800} data-parallax />
+        <img src="/hero/02.webp" alt="Praia paradisíaca" className="absolute inset-0 h-full w-full object-cover" loading="lazy" width={1920} height={800} data-parallax />
         <div className="absolute inset-0 bg-foreground/70" />
         <div className="mobile-shell relative z-10 mx-auto text-center" data-reveal>
           <SectionTitle label="Newsletter" title="Receba Novidades Exclusivas" subtitle="Cadastre-se e seja o primeiro a conhecer nossos lançamentos e oportunidades únicas." light />

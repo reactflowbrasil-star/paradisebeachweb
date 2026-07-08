@@ -1,9 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@/assets/logo-paradise.png";
-import heroImg from "@/assets/hero-beach.jpg";
-import sunsetImg from "@/assets/beach-sunset.jpg";
-import prop1 from "@/assets/property-1.jpg";
 
 const storageKey = "paradise_intro_seen_v2";
 
@@ -14,7 +11,12 @@ const phrases = [
   "Descubra o estilo de vida dos seus sonhos",
 ];
 
-const bgImages = [heroImg, sunsetImg, prop1];
+const bgImages = [
+  "/hero/001.jpg",
+  "/hero/02.webp",
+  "/hero/images-1.jpg",
+  "/hero/images.jpg",
+];
 
 export default function IntroSlides() {
   const [isOpen, setIsOpen] = useState(false);
