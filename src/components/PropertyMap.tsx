@@ -67,7 +67,12 @@ export default function PropertyMap({ property }: PropertyMapProps) {
 
   const lat = Number(property.lat);
   const lng = Number(property.lng);
-  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+  const hasCoords =
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    (lat !== 0 || lng !== 0) &&
+    Math.abs(lat) <= 90 &&
+    Math.abs(lng) <= 180;
 
   const tileUrl = token
     ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${token}`

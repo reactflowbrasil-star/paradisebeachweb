@@ -104,6 +104,7 @@ export default function AdminPanel() {
   const [propertyForm, setPropertyForm] = useState<Partial<PropertyRecord>>(emptyProperty);
   const [reservationForm, setReservationForm] = useState<Partial<ReservationRecord>>(emptyReservation);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -141,7 +142,7 @@ export default function AdminPanel() {
   }), [properties, photos, reservations]);
 
   async function loadAll(nextSelectedId?: string) {
-    setLoading(true);
+    setRefreshing(true);
     try {
       const [{ properties: propertyRows, photos: photoRows }, { reservations: reservationRows }] = await Promise.all([
         api.getProperties(),
@@ -158,6 +159,7 @@ export default function AdminPanel() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar dados");
     } finally {
+      setRefreshing(false);
       setLoading(false);
     }
   }
@@ -264,7 +266,10 @@ export default function AdminPanel() {
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
           </div>
-          <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Painel de propriedades</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="font-serif text-3xl font-bold text-primary md:text-4xl">Painel de propriedades</h1>
+            {refreshing && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+          </div>
           <p className="mt-2 text-muted-foreground">Cadastro, galeria, localizacao, reservas e metodos de reserva.</p>
         </div>
         <Button onClick={() => { setSelectedId(""); setPropertyForm(emptyProperty); }}>
