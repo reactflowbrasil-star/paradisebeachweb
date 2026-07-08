@@ -61,8 +61,8 @@ const emptyProperty: Partial<PropertyRecord> = {
   price: 0,
   price_label: "/diaria",
   location: "",
-  city: "",
-  state: "BA",
+  city: "João Pessoa",
+  state: "PB",
   description: "",
   bedrooms: 1,
   bathrooms: 1,
@@ -325,7 +325,7 @@ export default function AdminPanel() {
                   <Input type="number" value={propertyForm.min_nights ?? 1} onChange={(e) => updateForm("min_nights", Number(e.target.value))} />
                 </Field>
                 <Field label="Cidade">
-                  <Input value={propertyForm.city || ""} onChange={(e) => updateForm("city", e.target.value)} />
+                  <Select value={propertyForm.city} onChange={(value) => updateForm("city", value)} options={["João Pessoa", "Campina Grande"]} />
                 </Field>
                 <Field label="UF">
                   <Input value={propertyForm.state || ""} maxLength={2} onChange={(e) => updateForm("state", e.target.value.toUpperCase())} />
