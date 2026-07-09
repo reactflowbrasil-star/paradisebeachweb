@@ -22,9 +22,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.svg"],
       manifest: {
-        name: "Paradise Beach Imobiliária",
-        short_name: "ParadiseBeach",
-        description: "Imóveis de luxo à beira-mar no litoral brasileiro.",
+        name: "Paradise Beach Temporada",
+        short_name: "ParadiseBeachTemporada",
+        description: "Imóveis de temporada à beira-mar no litoral brasileiro.",
         theme_color: "#0f766e",
         background_color: "#fdfaf5",
         display: "standalone",

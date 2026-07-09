@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import SectionTitle from "@/components/SectionTitle";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 const contactSchema = z.object({
@@ -116,6 +116,13 @@ export default function Contact() {
                   <div>
                     <p className="font-medium text-foreground">E-mail</p>
                     <p className="text-muted-foreground">reservaparadisebeach@gmail.com</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><Instagram size={20} className="text-primary" /></div>
+                  <div>
+                    <p className="font-medium text-foreground">Instagram</p>
+                    <a href="https://www.instagram.com/paradisebeachoficial?igsh=MXN6NGZicXcybHF0bg%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">@paradisebeachoficial</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">

@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function PropertyCard({ property, index = 0 }: Props) {
+  const whatsappNumber = property.whatsapp || "5583991331939";
   return (
     <motion.div
       data-reveal
@@ -50,22 +51,21 @@ export default function PropertyCard({ property, index = 0 }: Props) {
           <h3 className="mb-2 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
             {property.title}
           </h3>
-          <a
-            href={`https://wa.me/${property.whatsapp || "5583991331939"}?text=Olá! Tenho interesse no imóvel: ${property.title}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-4 py-2 text-sm font-semibold text-gold-foreground hover:shadow-gold transition-all mb-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Phone size={14} /> Negociar via WhatsApp
-          </a>
-          <div className="flex items-center gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
-            {property.bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} /> {property.bedrooms}</span>}
-            {property.bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} /> {property.bathrooms}</span>}
-            <span className="flex items-center gap-1"><Maximize size={14} /> {property.area}m²</span>
-          </div>
         </div>
       </Link>
+      <a
+        href={`https://wa.me/${whatsappNumber}?text=Olá! Tenho interesse no imóvel: ${property.title}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-4 py-2 text-sm font-semibold text-gold-foreground hover:shadow-gold transition-all mb-4"
+      >
+        <Phone size={14} /> Negociar via WhatsApp
+      </a>
+      <div className="flex items-center gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
+        {property.bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} /> {property.bedrooms}</span>}
+        {property.bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} /> {property.bathrooms}</span>}
+        <span className="flex items-center gap-1"><Maximize size={14} /> {property.area}m²</span>
+      </div>
     </motion.div>
   );
 }

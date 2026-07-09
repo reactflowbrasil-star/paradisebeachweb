@@ -38,12 +38,9 @@ export default function PropertiesPage({ listing }: Props) {
     <div className="pb-16 pt-24 sm:pt-28">
       <div className="mobile-shell mx-auto">
         <SectionTitle
-          label={listing === "venda" ? "Compre" : "Alugue"}
-          title={listing === "venda" ? "Imóveis à Venda" : "Imóveis para Aluguel"}
-          subtitle={listing === "venda"
-            ? "Encontre a propriedade perfeita para realizar seu sonho à beira-mar."
-            : "Viva experiências inesquecíveis nas melhores praias do Brasil."
-          }
+          label="Portfólio"
+          title="Imóveis de Temporada"
+          subtitle="Viva experiências inesquecíveis nas melhores praias do Brasil."
         />
 
         {/* Filters */}

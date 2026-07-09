@@ -31,7 +31,7 @@ export default function About() {
               Fundada em 2010 em Trancoso, Bahia, a Paradise Beach nasceu da paixão por unir pessoas extraordinárias a propriedades excepcionais. Acreditamos que cada cliente merece um lar que reflita seus sonhos — e que esse lar deve estar nos cenários mais deslumbrantes do litoral brasileiro.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Nossa equipe de consultores imobiliários é formada por profissionais apaixonados pelo mercado de luxo, com profundo conhecimento das regiões litorâneas mais desejadas do Brasil. Oferecemos um serviço personalizado, discreto e de excelência em cada etapa da jornada.
+              Nossa equipe de consultores imobiliários é formada por profissionais apaixonados pelo mercado de temporada, com profundo conhecimento das regiões litorâneas mais desejadas do Brasil. Oferecemos um serviço personalizado, discreto e de excelência em cada etapa da jornada.
             </p>
             <h2 className="font-serif text-3xl font-bold text-foreground mb-6 mt-12">Nossos Valores</h2>
             <ul className="space-y-4 text-muted-foreground">
