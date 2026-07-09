@@ -11,43 +11,50 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
-
     <meta property="og:type" content="website" />
-
     <meta name="twitter:card" content="summary_large_image" />
-
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "RealEstateAgent",
       "name": "Paradise Beach Imobiliária",
-      "description": "Especializada em imóveis à beira-mar no litoral brasileiro",
+      "description": "Especializada em imóveis de temporada à beira-mar no litoral brasileiro",
       "url": "https://paradisebeach.com.br"
     }
     </script>
-    
-  
-  
-  
+
   <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/Q1OOrrev7agcknYlyFIW2kr9Lm13/social-images/social-1775601178580-1000811560.webp">
   <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/Q1OOrrev7agcknYlyFIW2kr9Lm13/social-images/social-1775601178580-1000811560.webp">
-  
-  
-  
-  
+
+
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  
-  
-  
-  
+
+
+
   <meta property="og:title" content="Paradise Beach — Imóveis de Temporada">
   <meta name="twitter:title" content="Paradise Beach — Imóveis de Temporada">
   <meta property="og:description" content="Paradise Beach: especializada em imóveis de temporada à beira-mar nas praias mais paradisíacas do Brasil.">
   <meta name="twitter:description" content="Paradise Beach: especializada em imóveis de temporada à beira-mar nas praias mais paradisíacas do Brasil.">
-</head>
-
+  <link rel="manifest" href="/manifest.webmanifest">
+  </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module">
+      if ('serviceWorker' in navigator) {
+        const current = 'v202607082';
+        const known = sessionStorage.getItem('pb_ver');
+        if (known !== current) {
+          sessionStorage.setItem('pb_ver', current);
+          navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(reg => reg.unregister()));
+          caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
+          const url = new URL(window.location.href);
+          url.searchParams.set('_deploy', current);
+          window.location.replace(url.toString());
+        }
+      }
+    </script>
   </body>
 </html>
