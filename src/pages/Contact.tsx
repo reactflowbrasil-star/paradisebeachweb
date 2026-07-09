@@ -101,14 +101,14 @@ export default function Contact() {
                   <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><Phone size={20} className="text-primary" /></div>
                   <div>
                     <p className="font-medium text-foreground">Telefone</p>
-                    <p className="text-muted-foreground">(81) 9229-2821</p>
+                    <p className="text-muted-foreground">(83) 99133-1939</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center shrink-0"><Phone size={20} className="text-primary" /></div>
                   <div>
                     <p className="font-medium text-foreground">WhatsApp</p>
-                    <p className="text-muted-foreground">+55 81 9652-0169</p>
+                    <p className="text-muted-foreground">(83) 99133-1939</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">

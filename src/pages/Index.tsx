@@ -29,7 +29,7 @@ const testimonials = [
 
 export default function Index() {
   const { properties, loading } = useProperties();
-  const featured = properties.filter((p) => p.featured).slice(0, 6);
+  const featured = properties.filter((p) => p.featured);
   const [slideIndex, setSlideIndex] = useState(0);
 
   const nextSlide = useCallback(() => {
@@ -44,10 +44,10 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>Paradise Beach - Imóveis de Luxo à Beira-Mar | Aluguel</title>
-        <meta name="description" content="Encontre imóveis de luxo à beira-mar no Paradise Beach. Villas, casas e apartamentos premium para aluguel nas melhores praias do Brasil." />
-        <meta name="keywords" content="imóveis beira-mar, villas luxo, casas praia, aluguel temporada" />
-        <meta property="og:title" content="Paradise Beach - Imóveis de Luxo à Beira-Mar" />
+        <title>Paradise Beach - Imóveis à Beira-Mar | Aluguel</title>
+        <meta name="description" content="Encontre imóveis à beira-mar no Paradise Beach. Villas, casas e apartamentos premium para aluguel nas melhores praias do Brasil." />
+        <meta name="keywords" content="imóveis beira-mar, villas, casas praia, aluguel temporada" />
+        <meta property="og:title" content="Paradise Beach - Imóveis à Beira-Mar" />
         <meta property="og:description" content="Viva o paraíso: imóveis premium à beira-mar para aluguel." />
         <meta property="og:image" content="/hero/001.jpg" />
         <meta property="og:url" content="https://paradisebeach.com" />
@@ -80,9 +80,9 @@ export default function Index() {
         </div>
         <div className="mobile-shell relative z-10 mx-auto text-center" data-reveal>
           <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
-            <span className="mb-3 block text-xs font-semibold uppercase tracking-[0.3em] text-gold sm:text-sm">Imobiliária de Luxo</span>
+            <span className="mb-3 block text-xs font-semibold uppercase tracking-[0.3em] text-gold sm:text-sm">Imóveis à Beira-Mar</span>
             <h1 className="mb-5 text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-              Seu Paraíso<br />à Beira-Mar
+              O Paraíso<br />à Beira-Mar
             </h1>
             <p className="mx-auto mb-8 max-w-2xl text-base font-light text-primary-foreground/80 sm:text-lg md:text-xl">
               Descubra propriedades exclusivas nas praias mais deslumbrantes do Brasil. Viva o estilo de vida que você sempre sonhou.

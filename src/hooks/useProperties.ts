@@ -117,5 +117,4 @@ export function useProperty(id: string | undefined) {
   return { property, loading };
 }
 
-export const formatPrice = (price: number, label?: string) =>
-  `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
+export const formatPrice = () => "Negociar via WhatsApp";

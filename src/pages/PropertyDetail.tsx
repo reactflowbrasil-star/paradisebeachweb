@@ -28,7 +28,7 @@ export default function PropertyDetail() {
     );
   }
 
-  const whatsappNumber = property.whatsapp || "5573999990000";
+  const whatsappNumber = property.whatsapp || "5583991331939";
 
   return (
     <div className="pb-16 pt-24 sm:pt-28">

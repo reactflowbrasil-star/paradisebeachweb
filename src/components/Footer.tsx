@@ -15,7 +15,7 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
-              Seu paraíso à beira-mar. Especialistas em reservas e imóveis de luxo no litoral brasileiro.
+              Especialistas em reservas e imóveis no litoral brasileiro.
             </p>
           </div>
 
@@ -32,7 +32,7 @@ export default function Footer() {
           <div>
             <h4 className="font-serif text-lg font-semibold mb-4">Contato</h4>
             <div className="flex flex-col gap-3 text-sm text-primary-foreground/70">
-              <span className="flex items-center gap-2"><Phone size={16} className="text-gold" /> (81) 9229-2821</span>
+              <span className="flex items-center gap-2"><Phone size={16} className="text-gold" /> (83) 99133-1939</span>
               <span className="flex items-center gap-2"><Mail size={16} className="text-gold" /> reservaparadisebeach@gmail.com</span>
               <span className="flex items-center gap-2"><MapPin size={16} className="text-gold" /> Av. Fernando Luiz Henrique, João Pessoa — PB</span>
             </div>
@@ -41,7 +41,7 @@ export default function Footer() {
           <div>
             <h4 className="font-serif text-lg font-semibold mb-4">Redes Sociais</h4>
             <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-gold transition-colors" aria-label="Instagram">
+              <a href="https://www.instagram.com/paradisebeachoficial?igsh=MXN6NGZicXcybHF0bg%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-gold transition-colors" aria-label="Instagram">
                 <Instagram size={18} />
               </a>
               <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-gold transition-colors" aria-label="Facebook">

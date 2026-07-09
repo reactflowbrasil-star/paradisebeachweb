@@ -18,15 +18,14 @@ describe("PropertyCard", () => {
     expect(screen.getByText(mockProperty.title)).toBeInTheDocument();
   });
 
-  it("renders property price", () => {
+  it("renders price as negotiable via WhatsApp", () => {
     render(
       <BrowserRouter>
         <PropertyCard property={mockProperty} />
       </BrowserRouter>
     );
 
-    const formattedPrice = `R$ ${mockProperty.price.toLocaleString("pt-BR")}`;
-    expect(screen.getByText(formattedPrice)).toBeInTheDocument();
+    expect(screen.getByText("Negociar via WhatsApp")).toBeInTheDocument();
   });
 
   it("renders property location", () => {

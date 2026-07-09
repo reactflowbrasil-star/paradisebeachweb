@@ -158,6 +158,4 @@ export const properties: Property[] = [
   },
 ];
 
-export const formatPrice = (price: number, label?: string) => {
-  return `R$ ${price.toLocaleString("pt-BR")}${label || ""}`;
-};
+export const formatPrice = () => "Negociar via WhatsApp";

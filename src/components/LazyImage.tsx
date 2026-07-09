@@ -19,9 +19,11 @@ export default function LazyImage({
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -31,20 +33,12 @@ export default function LazyImage({
       },
       { threshold: 0.1 }
     );
-
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
-
+    observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-  };
-
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div ref={containerRef} className={`relative overflow-hidden ${className}`}>
       {!isLoaded && (
         <img
           src={placeholder}
@@ -55,7 +49,6 @@ export default function LazyImage({
       )}
       {isInView && (
         <img
-          ref={imgRef}
           src={src}
           alt={alt}
           width={width}
@@ -63,7 +56,7 @@ export default function LazyImage({
           className={`h-full w-full object-cover transition-opacity duration-300 ${
             isLoaded ? "opacity-100" : "opacity-0"
           }`}
-          onLoad={handleLoad}
+          onLoad={() => setIsLoaded(true)}
         />
       )}
     </div>

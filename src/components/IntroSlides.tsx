@@ -5,7 +5,7 @@ import logoImg from "@/assets/logo-paradise.png";
 const storageKey = "paradise_intro_seen_v2";
 
 const phrases = [
-  "Seu paraíso à beira-mar",
+  "O paraíso à beira-mar",
   "Imóveis de alto padrão no litoral brasileiro",
   "Exclusividade, conforto e sofisticação",
   "Descubra o estilo de vida dos seus sonhos",
