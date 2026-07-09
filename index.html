@@ -42,19 +42,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module">
-      if ('serviceWorker' in navigator) {
-        const current = 'v202607082';
-        const known = sessionStorage.getItem('pb_ver');
-        if (known !== current) {
-          sessionStorage.setItem('pb_ver', current);
-          navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(reg => reg.unregister()));
-          caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
-          const url = new URL(window.location.href);
-          url.searchParams.set('_deploy', current);
-          window.location.replace(url.toString());
-        }
-      }
-    </script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

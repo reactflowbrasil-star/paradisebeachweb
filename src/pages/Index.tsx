@@ -29,7 +29,6 @@ const testimonials = [
 
 export default function Index() {
   const { properties, loading } = useProperties();
-  const featured = properties.filter((p) => p.featured);
   const [slideIndex, setSlideIndex] = useState(0);
 
   const nextSlide = useCallback(() => {
@@ -124,15 +123,15 @@ export default function Index() {
       <section className="bg-sand py-16 sm:py-20 md:py-24">
         <div className="mobile-shell mx-auto">
           <div data-reveal>
-            <SectionTitle label="Portfólio" title="Imóveis de Temporada em Destaque" subtitle="Propriedades excepcionais selecionadas para você." />
+            <SectionTitle label="Portfólio" title="Imóveis de Temporada" subtitle="Conheça todas as nossas opções de aluguel." />
           </div>
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-          ) : featured.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12">Nenhum imóvel em destaque no momento.</p>
+          ) : properties.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">Nenhum imóvel cadastrado no momento.</p>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 sm:gap-8">
-              {featured.map((p, i) => (
+              {properties.map((p, i) => (
                 <PropertyCard key={p.id} property={p} index={i} />
               ))}
             </div>

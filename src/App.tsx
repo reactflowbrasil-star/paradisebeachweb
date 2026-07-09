@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import AdminPanel from "./pages/AdminPanel";
 import { useWebflowEffects } from "@/hooks/use-webflow-effects";
 import IntroSlides from "@/components/IntroSlides";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ function AppShell() {
     <ErrorBoundary>
       <IntroSlides />
       <Navbar />
+      <ScrollToTop />
       <main className="min-h-screen">
         <Routes>
           <Route path="/" element={<Index />} />
