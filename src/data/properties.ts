@@ -102,7 +102,7 @@ export const properties: Property[] = [
     location: "Praia de Maresias",
     city: "São Sebastião",
     state: "SP",
-    description: "Apartamento de alto padrão no condomínio mais exclusivo da região. Infraestrutura completa de lazer, segurança 24h e localização privilegiada a poucos passos da praia.",
+    description: "Apartamento para temporada no condomínio mais exclusivo da região. Infraestrutura completa de lazer, segurança 24h e localização privilegiada a poucos passos da praia.",
     bedrooms: 3,
     bathrooms: 4,
     area: 220,

@@ -44,11 +44,11 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>Paradise Beach - Imóveis à Beira-Mar | Aluguel</title>
-        <meta name="description" content="Encontre imóveis à beira-mar no Paradise Beach. Villas, casas e apartamentos premium para aluguel nas melhores praias do Brasil." />
-        <meta name="keywords" content="imóveis beira-mar, villas, casas praia, aluguel temporada" />
-        <meta property="og:title" content="Paradise Beach - Imóveis à Beira-Mar" />
-        <meta property="og:description" content="Viva o paraíso: imóveis premium à beira-mar para aluguel." />
+        <title>Paradise Beach - Imóveis de Temporada | Aluguel</title>
+        <meta name="description" content="Encontre imóveis de temporada no Paradise Beach. Villas, casas e apartamentos premium para aluguel nas melhores praias do Brasil." />
+        <meta name="keywords" content="imóveis de temporada, villas, casas praia, aluguel temporada, reserva" />
+        <meta property="og:title" content="Paradise Beach - Imóveis de Temporada" />
+        <meta property="og:description" content="Viva o paraíso: imóveis de temporada à beira-mar para aluguel." />
         <meta property="og:image" content="/hero/001.jpg" />
         <meta property="og:url" content="https://paradisebeach.com" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -80,13 +80,13 @@ export default function Index() {
         </div>
         <div className="mobile-shell relative z-10 mx-auto text-center" data-reveal>
           <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
-            <span className="mb-3 block text-xs font-semibold uppercase tracking-[0.3em] text-gold sm:text-sm">Imóveis à Beira-Mar</span>
-            <h1 className="mb-5 text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-              O Paraíso<br />à Beira-Mar
-            </h1>
-            <p className="mx-auto mb-8 max-w-2xl text-base font-light text-primary-foreground/80 sm:text-lg md:text-xl">
-              Descubra propriedades exclusivas nas praias mais deslumbrantes do Brasil. Viva o estilo de vida que você sempre sonhou.
-            </p>
+             <span className="mb-3 block text-xs font-semibold uppercase tracking-[0.3em] text-gold sm:text-sm">Imóveis de Temporada</span>
+             <h1 className="mb-5 text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+               O Paraíso<br />à Beira-Mar
+             </h1>
+             <p className="mx-auto mb-8 max-w-2xl text-base font-light text-primary-foreground/80 sm:text-lg md:text-xl">
+               Descubra imóveis de temporada nas praias mais deslumbrantes do Brasil. Viva o estilo de vida que você sempre sonhou.
+             </p>
             <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
               <Link to="/aluguel" data-magnetic className="button-pop rounded-full bg-gradient-gold px-7 py-3.5 text-base font-semibold text-gold-foreground hover:shadow-gold sm:px-8 sm:text-lg">
                 Ver Imóveis para Reserva
@@ -104,7 +104,7 @@ export default function Index() {
       <section className="bg-background py-16 sm:py-20 md:py-24">
         <div className="mobile-shell mx-auto">
           <div data-reveal>
-            <SectionTitle label="Excelência" title="Por que Paradise Beach?" subtitle="Mais de uma década de expertise em imóveis de alto padrão no litoral brasileiro." />
+            <SectionTitle label="Excelência" title="Por que Paradise Beach?" subtitle="Mais de uma década de expertise em imóveis de temporada no litoral brasileiro." />
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 lg:gap-8">
             {benefits.map((b) => (
@@ -124,7 +124,7 @@ export default function Index() {
       <section className="bg-sand py-16 sm:py-20 md:py-24">
         <div className="mobile-shell mx-auto">
           <div data-reveal>
-            <SectionTitle label="Portfólio" title="Imóveis em Destaque" subtitle="Propriedades excepcionais selecionadas para você." />
+            <SectionTitle label="Portfólio" title="Imóveis de Temporada em Destaque" subtitle="Propriedades excepcionais selecionadas para você." />
           </div>
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>

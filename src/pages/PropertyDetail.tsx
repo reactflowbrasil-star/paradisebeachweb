@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useProperty, formatPrice } from "@/hooks/useProperties";
+import { useProperty } from "@/hooks/useProperties";
 import { Bed, Bath, Maximize, MapPin, ArrowLeft, Phone, Share2, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import LazyImage from "@/components/LazyImage";
@@ -141,9 +141,9 @@ export default function PropertyDetail() {
                   </span>
                   <span className="capitalize text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">{property.type}</span>
                 </div>
-                <p className="text-3xl font-bold text-primary mb-6">
-                  {formatPrice(property.price, property.priceLabel)}
-                </p>
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="text-2xl font-bold text-primary">Valor a negociar</span>
+                </div>
 
                 <a
                   href={`https://wa.me/${whatsappNumber}?text=Olá! Tenho interesse no imóvel: ${property.title}`}

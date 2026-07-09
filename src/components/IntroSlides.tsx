@@ -6,7 +6,7 @@ const storageKey = "paradise_intro_seen_v2";
 
 const phrases = [
   "O paraíso à beira-mar",
-  "Imóveis de alto padrão no litoral brasileiro",
+  "Imóveis de temporada no litoral brasileiro",
   "Exclusividade, conforto e sofisticação",
   "Descubra o estilo de vida dos seus sonhos",
 ];
@@ -172,9 +172,9 @@ export default function IntroSlides() {
                   <h1 className="font-serif text-3xl font-bold text-primary-foreground sm:text-4xl">
                     Paradise<span className="text-gradient-gold">Beach</span>
                   </h1>
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.35em] text-gold">
-                    Imóveis de Alto Padrão
-                  </p>
+                   <p className="mt-2 text-xs font-semibold uppercase tracking-[0.35em] text-gold">
+                     Imóveis de Temporada
+                   </p>
                 </motion.div>
               )}
             </AnimatePresence>
